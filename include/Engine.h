@@ -2,6 +2,17 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <vector>
+#include <memory>
+#include <iostream>
+
+// Наші модулі
+#include "Input.h"
+#include "Shader.h"
+#include "Shape.h"
 
 class Engine {
 public:
@@ -13,16 +24,16 @@ public:
 
 private:
     GLFWwindow* window;
-    int width;
-    int height;
+    int width, height;
 
-    float yaw;
-    float pitch;
-    float fov;
+    std::unique_ptr<Input> input;
+    std::unique_ptr<Shader> shader;
 
-    float lastX;
-    float lastY;
-    bool firstMouse;
+    std::vector<std::unique_ptr<Shape>> shapes;
+
+    glm::vec3 cameraPos;
+    glm::vec3 cameraFront;
+    glm::vec3 cameraUp;
 
     float deltaTime;
     float lastFrame;

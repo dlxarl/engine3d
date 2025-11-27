@@ -1,16 +1,17 @@
 #include "Engine.h"
-#include <iostream>
+#include "Cube.h"
 
 Engine::Engine() {
     window = nullptr;
     width = 800;
     height = 600;
-    yaw = -90.0f;
-    pitch = 0.0f;
-    fov = 45.0f;
-    lastX = width / 2.0f;
-    lastY = height / 2.0f;
-    firstMouse = true;
+
+    input = std::make_unique<Input>();
+
+    cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+    cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
     deltaTime = 0.0f;
     lastFrame = 0.0f;
 }
@@ -39,18 +40,31 @@ int Engine::init(int width, int height, const char* title) {
         return -1;
     }
     glfwMakeContextCurrent(window);
-    
+
     glfwSetWindowUserPointer(window, this);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    glEnable(GL_DEPTH_TEST);
+
+    shader = std::make_unique<Shader>("src/default.vert", "src/default.frag");
+
+    auto cube1 = std::make_unique<Cube>();
+    cube1->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    shapes.push_back(std::move(cube1));
+
+    auto cube2 = std::make_unique<Cube>();
+    cube2->setPosition(glm::vec3(2.0f, 1.0f, -3.0f));
+    shapes.push_back(std::move(cube2));
 
     return 0;
 }
@@ -74,60 +88,57 @@ void Engine::processInput() {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float cameraSpeed = 2.5f * deltaTime;
+    float velocity = 2.5f * deltaTime;
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        std::cout << "Forward: " << cameraSpeed << std::endl;
+        cameraPos += cameraFront * velocity;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        std::cout << "Backward" << std::endl;
+        cameraPos -= cameraFront * velocity;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        std::cout << "Left" << std::endl;
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        std::cout << "Right" << std::endl;
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
 }
 
 void Engine::update() {
-    if (pitch > 89.0f) pitch = 89.0f;
-    if (pitch < -89.0f) pitch = -89.0f;
-    if (fov < 1.0f) fov = 1.0f;
-    if (fov > 45.0f) fov = 45.0f;
+    glm::vec3 front;
+    front.x = cos(glm::radians(input->yaw)) * cos(glm::radians(input->pitch));
+    front.y = sin(glm::radians(input->pitch));
+    front.z = sin(glm::radians(input->yaw)) * cos(glm::radians(input->pitch));
+    cameraFront = glm::normalize(front);
 }
 
 void Engine::render() {
-    float greenValue = (pitch + 90.0f) / 180.0f;
-    glClearColor(0.2f, greenValue, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    shader->use();
+
+    glm::mat4 projection = glm::perspective(glm::radians(input->fov), (float)width / (float)height, 0.1f, 100.0f);
+    shader->setMat4("projection", projection);
+
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    shader->setMat4("view", view);
+
+    for (const auto& shape : shapes) {
+        shape->draw(*shader);
+    }
 }
 
 void Engine::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void Engine::mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+void Engine::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
-
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
-    if (engine->firstMouse) {
-        engine->lastX = xpos;
-        engine->lastY = ypos;
-        engine->firstMouse = false;
+    if (engine) {
+        engine->input->handleMouse(xpos, ypos);
     }
-
-    float xoffset = xpos - engine->lastX;
-    float yoffset = engine->lastY - ypos;
-    engine->lastX = xpos;
-    engine->lastY = ypos;
-
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    engine->yaw += xoffset;
-    engine->pitch += yoffset;
 }
 
 void Engine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
-    engine->fov -= (float)yoffset;
+    if (engine) {
+        engine->input->handleScroll(xoffset, yoffset);
+    }
 }
