@@ -8,6 +8,10 @@
 #include "Shader.h"
 #include "Scene.h"
 
+extern glm::vec3 cameraPos;
+extern glm::vec3 cameraFront;
+extern glm::vec3 cameraUp;
+
 class Engine {
 public:
     Engine();
@@ -15,7 +19,6 @@ public:
 
     int init(int width, int height, const char* title);
     void run();
-
     void setScene(std::shared_ptr<Scene> scene);
 
 private:
@@ -23,15 +26,9 @@ private:
     int width, height;
 
     std::unique_ptr<Input> input;
-
     std::unique_ptr<Shader> lightingShader;
     std::unique_ptr<Shader> lampShader;
-
     std::shared_ptr<Scene> currentScene;
-
-    glm::vec3 cameraPos;
-    glm::vec3 cameraFront;
-    glm::vec3 cameraUp;
 
     float deltaTime;
     float lastFrame;

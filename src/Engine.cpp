@@ -1,17 +1,15 @@
 #include "Engine.h"
 #include <iostream>
 
+glm::vec3 cameraPos   = glm::vec3(0.0f, 2.0f,  6.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
 Engine::Engine() {
     window = nullptr;
-    width = 800;
-    height = 600;
-
+    width = 1920;
+    height = 1080;
     input = std::make_unique<Input>();
-
-    cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-    cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-
     deltaTime = 0.0f;
     lastFrame = 0.0f;
 }
@@ -83,16 +81,6 @@ void Engine::run() {
 void Engine::processInput() {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    float velocity = 2.5f * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraFront * velocity;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraFront * velocity;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
 }
 
 void Engine::update() {
@@ -108,25 +96,28 @@ void Engine::update() {
 }
 
 void Engine::render() {
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    int displayW, displayH;
+    glfwGetFramebufferSize(window, &displayW, &displayH);
+    glViewport(0, 0, displayW, displayH);
+    float aspectRatio = (displayH == 0) ? 1.0f : (float)displayW / (float)displayH;
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (currentScene) {
-        glm::mat4 projection = glm::perspective(glm::radians(input->fov), (float)width / height, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(input->fov), aspectRatio, 0.1f, 100.0f);
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         lightingShader->use();
-        lightingShader->setVec3("viewPos", cameraPos);
         lightingShader->setMat4("projection", projection);
         lightingShader->setMat4("view", view);
+        lightingShader->setVec3("viewPos", cameraPos);
 
         lampShader->use();
         lampShader->setMat4("projection", projection);
         lampShader->setMat4("view", view);
 
-        if (currentScene) {
-            currentScene->draw(*lightingShader, *lampShader, view, projection);
-        }
+        currentScene->draw(*lightingShader, *lampShader, view, projection);
     }
 }
 

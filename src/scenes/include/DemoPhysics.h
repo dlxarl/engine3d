@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "Shape.h"
 #include "Skybox.h"
+#include "Player.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
@@ -16,5 +17,6 @@ private:
     std::vector<std::unique_ptr<Shape>> shapes;
     std::unique_ptr<Shape> lightCube;
     std::unique_ptr<Skybox> skybox;
+    std::shared_ptr<Player> player;
     glm::vec3 lightPos;
 };

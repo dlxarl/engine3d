@@ -59,6 +59,8 @@ add_executable(${PROJECT_NAME}
         include/Skybox.h
         src/scenes/DemoPhysics.cpp
         src/scenes/include/DemoPhysics.h
+        src/Player.cpp
+        include/Player.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
