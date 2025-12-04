@@ -2,14 +2,14 @@
 
 Plane::Plane() {
     float vertices[] = {
-        5.0f, 0.0f,  5.0f,    0.0f, 1.0f, 0.0f,   10.0f, 0.0f,
-       -5.0f, 0.0f,  5.0f,    0.0f, 1.0f, 0.0f,    0.0f, 0.0f,
-       -5.0f, 0.0f, -5.0f,    0.0f, 1.0f, 0.0f,    0.0f, 10.0f,
+         0.5f, 0.0f,  0.5f,    0.0f, 1.0f, 0.0f,   10.0f, 0.0f,
+        -0.5f, 0.0f,  0.5f,    0.0f, 1.0f, 0.0f,    0.0f, 0.0f,
+        -0.5f, 0.0f, -0.5f,    0.0f, 1.0f, 0.0f,    0.0f, 10.0f,
 
-        5.0f, 0.0f,  5.0f,    0.0f, 1.0f, 0.0f,   10.0f, 0.0f,
-       -5.0f, 0.0f, -5.0f,    0.0f, 1.0f, 0.0f,    0.0f, 10.0f,
-        5.0f, 0.0f, -5.0f,    0.0f, 1.0f, 0.0f,   10.0f, 10.0f
-   };
+         0.5f, 0.0f,  0.5f,    0.0f, 1.0f, 0.0f,   10.0f, 0.0f,
+        -0.5f, 0.0f, -0.5f,    0.0f, 1.0f, 0.0f,    0.0f, 10.0f,
+         0.5f, 0.0f, -0.5f,    0.0f, 1.0f, 0.0f,   10.0f, 10.0f
+    };
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -41,7 +41,6 @@ void Plane::draw(Shader& shader) {
 
     for(unsigned int i = 0; i < textures.size(); i++) {
         std::string name = textures[i]->type;
-
         if(name == "texture_albedo") {
             shader.setInt("material.albedoMap", i);
             shader.setBool("material.hasAlbedo", true);
@@ -58,7 +57,6 @@ void Plane::draw(Shader& shader) {
             shader.setInt("material.aoMap", i);
             shader.setBool("material.hasAO", true);
         }
-
         textures[i]->bind(i);
     }
 

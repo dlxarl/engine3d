@@ -61,6 +61,7 @@ add_executable(${PROJECT_NAME}
         src/scenes/include/DemoPhysics.h
         src/Player.cpp
         include/Player.h
+        include/ShadowMap.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

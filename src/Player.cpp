@@ -20,6 +20,7 @@ void Player::update(float deltaTime, const std::vector<std::unique_ptr<Shape>>& 
 
     position += velocity * deltaTime;
     updateModelMatrix();
+
     checkCollisions(worldObjects, velocity * deltaTime);
 
     velocity.y = currentYVelocity;
@@ -36,26 +37,43 @@ void Player::move(glm::vec3 direction) {
     if (glm::length(direction) > 0) {
         float currentY = velocity.y;
         float speed = isCrouching ? crouchSpeed : runSpeed;
+        if (runSpeed == 4.0f && !isCrouching) speed = walkSpeed;
 
         velocity = direction * speed;
         velocity.y = currentY;
     } else {
-        float currentY = velocity.y;
-        velocity = glm::vec3(0.0f);
-        velocity.y = currentY;
+        velocity.x = 0.0f;
+        velocity.z = 0.0f;
     }
 }
 
 void Player::jump() {
-    if (isGrounded) {
-        velocity.y = std::sqrt(2.0f * std::abs(gravity) * jumpHeight);
+    if (isGrounded && !isCrouching) {
+        velocity.y = std::sqrt(2.0f * std::abs(-19.6f) * 2.0f);
         isGrounded = false;
     }
 }
 
-void Player::applyGravity(float deltaTime) {
-    velocity.y += gravity * deltaTime;
+void Player::setCrouch(bool crouching) {
+    if (crouching) {
+        if (!isCrouching) {
+            isCrouching = true;
+            scale.y = crouchHeight;
+            position.y -= (standHeight - crouchHeight) / 2.0f;
+            updateModelMatrix();
+        }
+    } else {
+        if (isCrouching) {
+            isCrouching = false;
+            position.y += (standHeight - crouchHeight) / 2.0f;
+            scale.y = standHeight;
+            updateModelMatrix();
+        }
+    }
+}
 
+void Player::applyGravity(float deltaTime) {
+    velocity.y += -19.6f * deltaTime;
     if (velocity.y < -50.0f) velocity.y = -50.0f;
 }
 

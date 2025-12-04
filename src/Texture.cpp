@@ -29,6 +29,10 @@ Texture::Texture(const char* path, const std::string& type)
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
         std::cout << "Texture failed to load: " << path << std::endl;
+
+        unsigned char errorData[] = { 255, 0, 255, 255 };
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, errorData);
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
     stbi_image_free(data);
 }
