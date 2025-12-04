@@ -4,12 +4,9 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <vector>
 #include <memory>
 #include <iostream>
-
-// Наші модулі
 #include "Input.h"
 #include "Shader.h"
 #include "Shape.h"
@@ -28,6 +25,12 @@ private:
 
     std::unique_ptr<Input> input;
     std::unique_ptr<Shader> shader;
+
+    std::unique_ptr<Shader> lightingShader;
+    std::unique_ptr<Shader> lampShader;
+
+    std::unique_ptr<Shape> lightCube;
+    glm::vec3 lightPos;
 
     std::vector<std::unique_ptr<Shape>> shapes;
 

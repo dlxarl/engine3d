@@ -2,6 +2,7 @@
 
 Shape::Shape() {
     model = glm::mat4(1.0f);
+    color = glm::vec3(1.0f);
     VAO = 0;
     VBO = 0;
 }
@@ -22,4 +23,12 @@ void Shape::rotate(float angle, glm::vec3 axis) {
 
 void Shape::setScale(glm::vec3 scaleVec) {
     model = glm::scale(model, scaleVec);
+}
+
+void Shape::setColor(glm::vec3 newColor) {
+    color = newColor;
+}
+
+glm::vec3 Shape::getColor() const {
+    return color;
 }
