@@ -36,6 +36,9 @@ add_executable(${PROJECT_NAME}
         include/Cube.h
         src/Shader.cpp
         include/Shader.h
+        include/Scene.h
+        src/scenes/DemoScene.cpp
+        src/scenes/include/DemoScene.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
