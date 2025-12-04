@@ -49,7 +49,7 @@ void Player::move(glm::vec3 direction) {
 
 void Player::jump() {
     if (isGrounded && !isCrouching) {
-        velocity.y = std::sqrt(2.0f * std::abs(-19.6f) * 2.0f);
+        velocity.y = std::sqrt(1.5f * std::abs(-19.6f) * 2.0f);
         isGrounded = false;
     }
 }

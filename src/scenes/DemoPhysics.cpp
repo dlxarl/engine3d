@@ -2,6 +2,10 @@
 #include "Cube.h"
 #include "Plane.h"
 #include "Texture.h"
+#include "ShadowMap.h"
+#include "PostProcessor.h"
+#include "Player.h"
+#include "HUD.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -16,6 +20,9 @@ void DemoPhysics::load() {
     postProcessor = std::make_unique<PostProcessor>(1920, 1080);
     shadowMap = std::make_unique<ShadowMap>();
     depthShader = std::make_unique<Shader>("src/shadow_depth.vert", "src/shadow_depth.frag");
+
+    hud = std::make_unique<HUD>(1920, 1080);
+    crosshairTexture = std::make_shared<Texture>("assets/hud/crosshair.png", "texture_diffuse");
 
     skybox = std::make_unique<Skybox>("assets/textures/skybox/night.hdr");
 
@@ -138,12 +145,21 @@ void DemoPhysics::renderScene(Shader& shader) {
     }
 }
 
+void DemoPhysics::drawShadow(Shader& shadowShader) {
+    renderScene(shadowShader);
+}
+
+glm::vec3 DemoPhysics::getLightPos() const {
+    return lightPos;
+}
+
 void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::mat4& view, const glm::mat4& proj) {
     int scrWidth, scrHeight;
     glfwGetFramebufferSize(glfwGetCurrentContext(), &scrWidth, &scrHeight);
 
     glm::mat4 lightProjection, lightView, lightSpaceMatrix;
     float near_plane = 1.0f, far_plane = 200.0f;
+
     lightProjection = glm::ortho(-60.0f, 60.0f, -60.0f, 60.0f, near_plane, far_plane);
     lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
     lightSpaceMatrix = lightProjection * lightView;
@@ -152,10 +168,14 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
     depthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
     shadowMap->bind();
-    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+
     renderScene(*depthShader);
+
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     shadowMap->unbind(scrWidth, scrHeight);
 
     if (postProcessor->enabled) {
@@ -178,8 +198,11 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
     lightingShader.setInt("shadowMap", 10);
 
     glDisable(GL_CULL_FACE);
+
     renderScene(lightingShader);
+
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     lampShader.use();
     lightCube->draw(lampShader);
@@ -192,4 +215,20 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
         postProcessor->endRender();
         postProcessor->draw(view, proj, 60.0f);
     }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDisable(GL_DEPTH_TEST);
+
+    hud->resize(scrWidth, scrHeight);
+
+    float crosshairSize = 4.0f;
+    float x = (scrWidth / 2.0f) - (crosshairSize / 2.0f);
+    float y = (scrHeight / 2.0f) - (crosshairSize / 2.0f);
+
+    hud->drawSprite(crosshairTexture, glm::vec2(x, y), glm::vec2(crosshairSize, crosshairSize));
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 }

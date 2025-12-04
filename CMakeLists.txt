@@ -64,6 +64,8 @@ add_executable(${PROJECT_NAME}
         include/ShadowMap.h
         src/PostProcessor.cpp
         include/PostProcessor.h
+        src/HUD.cpp
+        include/HUD.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
