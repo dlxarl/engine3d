@@ -62,6 +62,8 @@ add_executable(${PROJECT_NAME}
         src/Player.cpp
         include/Player.h
         include/ShadowMap.h
+        src/PostProcessor.cpp
+        include/PostProcessor.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

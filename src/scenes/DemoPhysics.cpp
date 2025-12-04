@@ -13,6 +13,7 @@ extern glm::vec3 cameraPos;
 void DemoPhysics::load() {
     shapes.clear();
 
+    postProcessor = std::make_unique<PostProcessor>(1920, 1080);
     shadowMap = std::make_unique<ShadowMap>();
     depthShader = std::make_unique<Shader>("src/shadow_depth.vert", "src/shadow_depth.frag");
 
@@ -22,7 +23,7 @@ void DemoPhysics::load() {
 
     auto floor = std::make_unique<Plane>();
     floor->setPosition(glm::vec3(0.0f, -2.5f, 0.0f));
-    floor->setScale(glm::vec3(20.0f, 0.1f, 20.0f));
+    floor->setScale(glm::vec3(40.0f, 0.1f, 40.0f));
     floor->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
     floor->isStatic = true;
     floor->hasCollision = true;
@@ -43,11 +44,10 @@ void DemoPhysics::load() {
     floatingCube->hasCollision = true;
     shapes.push_back(std::move(floatingCube));
 
-    lightPos = glm::vec3(0.0f, 20.0f, 0.0f);
+    lightPos = glm::vec3(10.0f, 30.0f, 10.0f);
     lightCube = std::make_unique<Cube>();
     lightCube->setPosition(lightPos);
     lightCube->setScale(glm::vec3(0.5f));
-    lightCube->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
 
     player = std::make_shared<Player>(glm::vec3(0.0f, 25.0f, 2.0f));
 }
@@ -60,11 +60,20 @@ void DemoPhysics::update(float deltaTime) {
         return;
     }
 
-    float time = (float)glfwGetTime();
-    lightPos.x = sin(time * 0.5f) * 20.0f;
-    lightPos.z = cos(time * 0.5f) * 20.0f;
-    lightPos.y = 15.0f;
+    static bool mKeyPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mKeyPressed) {
+        postProcessor->enabled = !postProcessor->enabled;
+        std::cout << "PostProcessing: " << (postProcessor->enabled ? "ON" : "OFF") << std::endl;
+        mKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE) {
+        mKeyPressed = false;
+    }
 
+    float time = (float)glfwGetTime();
+    lightPos.x = sin(time * 0.5f) * 30.0f;
+    lightPos.z = cos(time * 0.5f) * 30.0f;
+    lightPos.y = 25.0f;
     lightCube->setPosition(lightPos);
 
     float gravity = -19.6f;
@@ -85,15 +94,8 @@ void DemoPhysics::update(float deltaTime) {
                 if (!other->hasCollision) continue;
 
                 if (object->checkCollision(*other)) {
-                    if (object->velocity.y < 0) {
-                        float otherTop = other->position.y + other->scale.y * 0.5f;
-                        float myBottom = object->scale.y * 0.5f;
-                        object->position.y = otherTop + myBottom;
-                        object->velocity.y = 0.0f;
-                    } else {
-                        object->setPosition(oldPosition);
-                        object->velocity = glm::vec3(0.0f);
-                    }
+                    object->setPosition(oldPosition);
+                    object->velocity = glm::vec3(0.0f);
                 }
             }
         }
@@ -137,14 +139,13 @@ void DemoPhysics::renderScene(Shader& shader) {
 }
 
 void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::mat4& view, const glm::mat4& proj) {
-    glm::mat4 lightProjection, lightView;
-    glm::mat4 lightSpaceMatrix;
-    float near_plane = 1.0f, far_plane = 100.0f;
+    int scrWidth, scrHeight;
+    glfwGetFramebufferSize(glfwGetCurrentContext(), &scrWidth, &scrHeight);
 
-    lightProjection = glm::ortho(-35.0f, 35.0f, -35.0f, 35.0f, near_plane, far_plane);
-
+    glm::mat4 lightProjection, lightView, lightSpaceMatrix;
+    float near_plane = 1.0f, far_plane = 200.0f;
+    lightProjection = glm::ortho(-60.0f, 60.0f, -60.0f, 60.0f, near_plane, far_plane);
     lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-
     lightSpaceMatrix = lightProjection * lightView;
 
     depthShader->use();
@@ -152,14 +153,19 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
 
     shadowMap->bind();
     glClear(GL_DEPTH_BUFFER_BIT);
-
-    glCullFace(GL_FRONT);
+    glDisable(GL_CULL_FACE);
     renderScene(*depthShader);
-    glCullFace(GL_BACK);
-
-    int scrWidth, scrHeight;
-    glfwGetFramebufferSize(glfwGetCurrentContext(), &scrWidth, &scrHeight);
+    glEnable(GL_CULL_FACE);
     shadowMap->unbind(scrWidth, scrHeight);
+
+    if (postProcessor->enabled) {
+        postProcessor->resize(scrWidth, scrHeight);
+        postProcessor->beginRender();
+    } else {
+        glViewport(0, 0, scrWidth, scrHeight);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
     lightingShader.use();
     lightingShader.setVec3("lightPos", lightPos);
@@ -180,5 +186,10 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
 
     if (skybox) {
         skybox->draw(view, proj);
+    }
+
+    if (postProcessor->enabled) {
+        postProcessor->endRender();
+        postProcessor->draw(view, proj, 60.0f);
     }
 }

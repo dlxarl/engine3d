@@ -4,6 +4,7 @@
 #include "Skybox.h"
 #include "Player.h"
 #include "ShadowMap.h"
+#include "PostProcessor.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
@@ -22,6 +23,7 @@ private:
 
     std::unique_ptr<ShadowMap> shadowMap;
     std::unique_ptr<Shader> depthShader;
+    std::unique_ptr<PostProcessor> postProcessor;
 
     glm::vec3 lightPos;
 
