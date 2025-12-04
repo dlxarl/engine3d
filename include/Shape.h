@@ -1,9 +1,11 @@
 #pragma once
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <vector>
+#include <memory>
 #include "Shader.h"
 #include "Texture.h"
-#include <memory>
-#include <vector>
-#include <glm/gtc/matrix_transform.hpp>
 
 class Shape {
 public:
@@ -16,13 +18,23 @@ public:
     void setScale(glm::vec3 scaleVec);
     void setColor(glm::vec3 newColor);
     glm::vec3 getColor() const;
-
     void addTexture(std::shared_ptr<Texture> tex);
+
+    glm::vec3 position;
+    glm::vec3 velocity;
+    glm::vec3 scale;
+
+    bool useGravity;
+    bool isStatic;
+    bool hasCollision;
+
+    bool checkCollision(Shape& other);
 
 protected:
     unsigned int VAO, VBO;
     glm::mat4 model;
     glm::vec3 color;
-
     std::vector<std::shared_ptr<Texture>> textures;
+
+    void updateModelMatrix();
 };

@@ -3,6 +3,15 @@
 Shape::Shape() {
     model = glm::mat4(1.0f);
     color = glm::vec3(1.0f);
+
+    position = glm::vec3(0.0f);
+    velocity = glm::vec3(0.0f);
+    scale = glm::vec3(1.0f);
+
+    useGravity = false;
+    isStatic = false;
+    hasCollision = true;
+
     VAO = 0;
     VBO = 0;
 }
@@ -13,8 +22,8 @@ Shape::~Shape() {
 }
 
 void Shape::setPosition(glm::vec3 pos) {
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, pos);
+    position = pos;
+    updateModelMatrix();
 }
 
 void Shape::rotate(float angle, glm::vec3 axis) {
@@ -22,7 +31,14 @@ void Shape::rotate(float angle, glm::vec3 axis) {
 }
 
 void Shape::setScale(glm::vec3 scaleVec) {
-    model = glm::scale(model, scaleVec);
+    scale = scaleVec;
+    updateModelMatrix();
+}
+
+void Shape::updateModelMatrix() {
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    model = glm::scale(model, scale);
 }
 
 void Shape::setColor(glm::vec3 newColor) {
@@ -35,4 +51,25 @@ glm::vec3 Shape::getColor() const {
 
 void Shape::addTexture(std::shared_ptr<Texture> tex) {
     textures.push_back(tex);
+}
+
+bool Shape::checkCollision(Shape& other) {
+    float halfX = 0.5f * scale.x;
+    float halfY = 0.5f * scale.y;
+    float halfZ = 0.5f * scale.z;
+
+    float otherHalfX = 0.5f * other.scale.x;
+    float otherHalfY = 0.5f * other.scale.y;
+    float otherHalfZ = 0.5f * other.scale.z;
+
+    bool collisionX = position.x + halfX >= other.position.x - otherHalfX &&
+                      other.position.x + otherHalfX >= position.x - halfX;
+
+    bool collisionY = position.y + halfY >= other.position.y - otherHalfY &&
+                      other.position.y + otherHalfY >= position.y - halfY;
+
+    bool collisionZ = position.z + halfZ >= other.position.z - otherHalfZ &&
+                      other.position.z + otherHalfZ >= position.z - halfZ;
+
+    return collisionX && collisionY && collisionZ;
 }
