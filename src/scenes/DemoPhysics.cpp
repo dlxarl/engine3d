@@ -157,10 +157,11 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
     int scrWidth, scrHeight;
     glfwGetFramebufferSize(glfwGetCurrentContext(), &scrWidth, &scrHeight);
 
+    // ОПТИМІЗАЦІЯ: Зменшено Frustum з 60 до 35 для вищої щільності тіней
     glm::mat4 lightProjection, lightView, lightSpaceMatrix;
     float near_plane = 1.0f, far_plane = 200.0f;
 
-    lightProjection = glm::ortho(-60.0f, 60.0f, -60.0f, 60.0f, near_plane, far_plane);
+    lightProjection = glm::ortho(-35.0f, 35.0f, -35.0f, 35.0f, near_plane, far_plane);
     lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
     lightSpaceMatrix = lightProjection * lightView;
 
