@@ -19,18 +19,33 @@ void DemoScene::load() {
     sphere->setColor(glm::vec3(1.0f, 0.0f, 0.0f));
     shapes.push_back(std::move(sphere));
 
-    auto brickTexture = std::make_shared<Texture>("assets/textures/wood.jpg");
+    auto cube = std::make_unique<Cube>();
+    cube->setPosition(glm::vec3(2.0f, 0.0f, 0.0f));
+    auto woodTex = std::make_shared<Texture>("assets/textures/wood.jpg", "texture_albedo");
+    cube->addTexture(woodTex);
+    shapes.push_back(std::move(cube));
 
-    auto cube1 = std::make_unique<Cube>();
-    cube1->setPosition(glm::vec3(1.5f, 0.0f, 0.0f));
-    cube1->setTexture(brickTexture);
-    shapes.push_back(std::move(cube1));
+    // building
+    auto building = std::make_unique<Model>("assets/models/cartoon_building.obj");
+    building->setPosition(glm::vec3(0.0f, -1.1f, 0.0f));
+    building->setScale(glm::vec3(0.1f));
 
-    auto car = std::make_unique<Model>("assets/models/golf.obj");
-    car->setPosition(glm::vec3(0.0f, -1.1f, 0.0f));
-    car->setScale(glm::vec3(0.001f));
-    car->setColor(glm::vec3(1.0f, 0.0f, 1.0f));
-    shapes.push_back(std::move(car));
+    auto albedo = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Albedo.png", "texture_albedo");
+    building->addTexture(albedo);
+
+    auto normal = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Normal.png", "texture_normal");
+    building->addTexture(normal);
+
+    auto roughness = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Roughness.png", "texture_roughness");
+    building->addTexture(roughness);
+
+    auto metallic = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Metallic.png", "texture_metallic");
+    building->addTexture(metallic);
+
+    auto ao = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_AO.png", "texture_ao");
+    building->addTexture(ao);
+
+    shapes.push_back(std::move(building));
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     lightCube = std::make_unique<Cube>();

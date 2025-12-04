@@ -47,7 +47,9 @@ Cube::Cube() {
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
@@ -67,15 +69,34 @@ Cube::Cube() {
 void Cube::draw(Shader& shader) {
     shader.setMat4("model", model);
 
-    if (texture) {
-        glActiveTexture(GL_TEXTURE0);
-        shader.setInt("texture_diffuse1", 0);
-        shader.setBool("useTexture", true);
-        texture->bind();
-    } else {
-        shader.setBool("useTexture", false);
-    }
+    shader.setBool("material.hasAlbedo", false);
+    shader.setBool("material.hasNormal", false);
+    shader.setBool("material.hasMetallic", false);
+    shader.setBool("material.hasRoughness", false);
+    shader.setBool("material.hasAO", false);
 
+    for(unsigned int i = 0; i < textures.size(); i++) {
+        std::string name = textures[i]->type;
+
+        if(name == "texture_albedo") {
+            shader.setInt("material.albedoMap", i);
+            shader.setBool("material.hasAlbedo", true);
+        } else if(name == "texture_normal") {
+            shader.setInt("material.normalMap", i);
+            shader.setBool("material.hasNormal", true);
+        } else if(name == "texture_metallic") {
+            shader.setInt("material.metallicMap", i);
+            shader.setBool("material.hasMetallic", true);
+        } else if(name == "texture_roughness") {
+            shader.setInt("material.roughnessMap", i);
+            shader.setBool("material.hasRoughness", true);
+        } else if(name == "texture_ao") {
+            shader.setInt("material.aoMap", i);
+            shader.setBool("material.hasAO", true);
+        }
+
+        textures[i]->bind(i);
+    }
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);

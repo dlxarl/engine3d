@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include <memory>
+#include <vector>
 #include <glm/gtc/matrix_transform.hpp>
 
 class Shape {
@@ -16,12 +17,12 @@ public:
     void setColor(glm::vec3 newColor);
     glm::vec3 getColor() const;
 
-    void setTexture(std::shared_ptr<Texture> tex);
+    void addTexture(std::shared_ptr<Texture> tex);
 
 protected:
     unsigned int VAO, VBO;
     glm::mat4 model;
     glm::vec3 color;
 
-    std::shared_ptr<Texture> texture;
+    std::vector<std::shared_ptr<Texture>> textures;
 };

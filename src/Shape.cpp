@@ -33,6 +33,6 @@ glm::vec3 Shape::getColor() const {
     return color;
 }
 
-void Shape::setTexture(std::shared_ptr<Texture> tex) {
-    texture = tex;
+void Shape::addTexture(std::shared_ptr<Texture> tex) {
+    textures.push_back(tex);
 }

@@ -3,7 +3,11 @@
 
 Model::Model(const std::string& path) {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+    const aiScene* scene = importer.ReadFile(path,
+        aiProcess_Triangulate |
+        aiProcess_GenSmoothNormals |
+        aiProcess_JoinIdenticalVertices
+    );
 
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
@@ -27,19 +31,25 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
 
-    // std::cout << "Loading mesh with " << mesh->mNumVertices << " vertices." << std::endl;
-
     for(unsigned int i = 0; i < mesh->mNumVertices; i++) {
         vertices.push_back(mesh->mVertices[i].x);
         vertices.push_back(mesh->mVertices[i].y);
         vertices.push_back(mesh->mVertices[i].z);
-        
+
         if (mesh->HasNormals()) {
             vertices.push_back(mesh->mNormals[i].x);
             vertices.push_back(mesh->mNormals[i].y);
             vertices.push_back(mesh->mNormals[i].z);
         } else {
             vertices.push_back(0.0f); vertices.push_back(0.0f); vertices.push_back(0.0f);
+        }
+
+        if(mesh->mTextureCoords[0]) {
+            vertices.push_back(mesh->mTextureCoords[0][i].x);
+            vertices.push_back(mesh->mTextureCoords[0][i].y);
+        } else {
+            vertices.push_back(0.0f);
+            vertices.push_back(0.0f);
         }
     }
 
@@ -64,10 +74,14 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newMesh.EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 
@@ -76,14 +90,33 @@ void Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
 void Model::draw(Shader& shader) {
     shader.setMat4("model", model);
+    shader.setBool("material.hasAlbedo", false);
+    shader.setBool("material.hasNormal", false);
+    shader.setBool("material.hasMetallic", false);
+    shader.setBool("material.hasRoughness", false);
+    shader.setBool("material.hasAO", false);
 
-    if (texture) {
-        glActiveTexture(GL_TEXTURE0);
-        shader.setInt("texture_diffuse1", 0);
-        shader.setBool("useTexture", true);
-        texture->bind();
-    } else {
-        shader.setBool("useTexture", false);
+    for(unsigned int i = 0; i < textures.size(); i++) {
+        std::string name = textures[i]->type;
+
+        if(name == "texture_albedo") {
+            shader.setInt("material.albedoMap", i);
+            shader.setBool("material.hasAlbedo", true);
+        } else if(name == "texture_normal") {
+            shader.setInt("material.normalMap", i);
+            shader.setBool("material.hasNormal", true);
+        } else if(name == "texture_metallic") {
+            shader.setInt("material.metallicMap", i);
+            shader.setBool("material.hasMetallic", true);
+        } else if(name == "texture_roughness") {
+            shader.setInt("material.roughnessMap", i);
+            shader.setBool("material.hasRoughness", true);
+        } else if(name == "texture_ao") {
+            shader.setInt("material.aoMap", i);
+            shader.setBool("material.hasAO", true);
+        }
+
+        textures[i]->bind(i);
     }
 
     for(const auto& mesh : meshes) {
