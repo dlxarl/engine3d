@@ -6,7 +6,7 @@
 int main() {
     Engine engine;
 
-    if (engine.init(800, 600, "Modular 3D Engine") != 0) {
+    if (engine.init(1980, 1080, "3D Engine") != 0) {
         std::cout << "Failed to initialize engine" << std::endl;
         return -1;
     }

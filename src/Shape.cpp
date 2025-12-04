@@ -32,3 +32,7 @@ void Shape::setColor(glm::vec3 newColor) {
 glm::vec3 Shape::getColor() const {
     return color;
 }
+
+void Shape::setTexture(std::shared_ptr<Texture> tex) {
+    texture = tex;
+}
