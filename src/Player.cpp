@@ -72,9 +72,18 @@ void Player::setCrouch(bool crouching) {
     }
 }
 
+void Player::setGrounded(bool grounded) {
+    isGrounded = grounded;
+    if (grounded) {
+        velocity.y = 0.0f;
+    }
+}
+
 void Player::applyGravity(float deltaTime) {
-    velocity.y += -19.6f * deltaTime;
-    if (velocity.y < -50.0f) velocity.y = -50.0f;
+    if (!isGrounded) {
+        velocity.y += -19.6f * deltaTime;
+        if (velocity.y < -50.0f) velocity.y = -50.0f;
+    }
 }
 
 void Player::checkCollisions(const std::vector<std::unique_ptr<Shape>>& worldObjects, glm::vec3 velocityStep) {

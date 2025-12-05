@@ -24,7 +24,7 @@ void DemoPhysics::load() {
     hud = std::make_unique<HUD>(1920, 1080);
     crosshairTexture = std::make_shared<Texture>("assets/hud/crosshair.png", "texture_diffuse");
 
-    skybox = std::make_unique<Skybox>("assets/textures/skybox/night.hdr");
+    skybox = std::make_unique<Skybox>("assets/skybox/Cold Sunset Equirect.png");
 
     auto grassTexture = std::make_shared<Texture>("assets/textures/grass/albedo.jpg", "texture_albedo");
 
@@ -51,12 +51,13 @@ void DemoPhysics::load() {
     floatingCube->hasCollision = true;
     shapes.push_back(std::move(floatingCube));
 
-    lightPos = glm::vec3(10.0f, 30.0f, 10.0f);
+    lightPos = glm::vec3(40.0f, 5.0f, -5.0f);
     lightCube = std::make_unique<Cube>();
     lightCube->setPosition(lightPos);
     lightCube->setScale(glm::vec3(0.5f));
 
-    player = std::make_shared<Player>(glm::vec3(0.0f, 25.0f, 2.0f));
+    player = std::make_shared<Player>(glm::vec3(0.0f, -1.5f, 2.0f));
+    player->setGrounded(true);
 }
 
 void DemoPhysics::update(float deltaTime) {
@@ -76,12 +77,6 @@ void DemoPhysics::update(float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE) {
         mKeyPressed = false;
     }
-
-    float time = (float)glfwGetTime();
-    lightPos.x = sin(time * 0.5f) * 30.0f;
-    lightPos.z = cos(time * 0.5f) * 30.0f;
-    lightPos.y = 25.0f;
-    lightCube->setPosition(lightPos);
 
     float gravity = -19.6f;
 
@@ -205,8 +200,7 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    lampShader.use();
-    lightCube->draw(lampShader);
+    // Куб джерела світла прибрано - світло невидиме
 
     if (skybox) {
         skybox->draw(view, proj);

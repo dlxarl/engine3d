@@ -26,8 +26,15 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 uniform vec3 objectColor;
+uniform float time;
 
 const float PI = 3.14159265359;
+
+// Sunrise/sunset colors
+const vec3 sunColor = vec3(1.0, 0.7, 0.4);        // Warm orange-yellow sun
+const vec3 skyColorZenith = vec3(0.4, 0.6, 0.9);  // Blue sky above
+const vec3 skyColorHorizon = vec3(1.0, 0.6, 0.3); // Orange at horizon
+const vec3 ambientGround = vec3(0.15, 0.1, 0.08); // Warm ground bounce
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -118,9 +125,19 @@ void main()
     vec3 L = normalize(lightPos - FragPos);
     vec3 H = normalize(V + L);
 
+    // Calculate sun height for atmospheric effects (0 = horizon, 1 = zenith)
+    vec3 sunDir = normalize(lightPos);
+    float sunHeight = clamp(sunDir.y, 0.0, 1.0);
+    
+    // Sunrise lighting - warmer when sun is low
+    vec3 sunlightColor = mix(sunColor, vec3(1.0, 0.95, 0.9), sunHeight);
+    
+    // Atmospheric scattering - more intense at sunrise
+    float scatterFactor = 1.0 - sunHeight * 0.5;
+    
     float distance = length(lightPos - FragPos);
     float attenuation = 1.0;
-    vec3 radiance = lightColor * attenuation * 2.0;
+    vec3 radiance = sunlightColor * lightColor * attenuation * (1.5 + sunHeight);
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
@@ -142,9 +159,33 @@ void main()
 
     float shadow = ShadowCalculation(FragPosLightSpace, N, L);
 
-    vec3 ambient = vec3(0.03) * albedo * ao;
-    vec3 color = ambient + (1.0 - shadow) * Lo;
+    // Realistic ambient lighting for sunrise
+    // Sky light from above (blue-ish)
+    float skyInfluence = max(dot(N, vec3(0.0, 1.0, 0.0)), 0.0);
+    vec3 skyAmbient = mix(skyColorHorizon, skyColorZenith, skyInfluence) * 0.15;
+    
+    // Ground bounce (warm, from below)
+    float groundInfluence = max(dot(N, vec3(0.0, -1.0, 0.0)), 0.0);
+    vec3 groundAmbient = ambientGround * groundInfluence * 0.3;
+    
+    // Horizon glow effect
+    vec3 toLight = normalize(lightPos - FragPos);
+    float horizonGlow = pow(max(1.0 - abs(toLight.y), 0.0), 2.0) * 0.1;
+    vec3 glowColor = sunColor * horizonGlow;
+    
+    // Combined ambient
+    vec3 ambient = (skyAmbient + groundAmbient + glowColor) * albedo * ao;
+    
+    // Softer shadows at sunrise (atmospheric scattering fills shadows)
+    float shadowSoftness = mix(0.4, 0.0, sunHeight); // More fill light when sun is low
+    float effectiveShadow = shadow * (1.0 - shadowSoftness);
+    
+    vec3 color = ambient + (1.0 - effectiveShadow) * Lo;
+    
+    // Subtle warm color grading for sunrise atmosphere
+    color = mix(color, color * sunColor, 0.1 * scatterFactor);
 
+    // Tone mapping
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));
 
