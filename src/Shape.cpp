@@ -7,6 +7,7 @@ Shape::Shape() {
     position = glm::vec3(0.0f);
     velocity = glm::vec3(0.0f);
     scale = glm::vec3(1.0f);
+    rotation = glm::vec3(0.0f);
 
     useGravity = false;
     isStatic = false;
@@ -27,7 +28,9 @@ void Shape::setPosition(glm::vec3 pos) {
 }
 
 void Shape::rotate(float angle, glm::vec3 axis) {
-    model = glm::rotate(model, glm::radians(angle), axis);
+    // Add rotation to existing rotation
+    rotation += axis * angle;
+    updateModelMatrix();
 }
 
 void Shape::setScale(glm::vec3 scaleVec) {
@@ -38,6 +41,9 @@ void Shape::setScale(glm::vec3 scaleVec) {
 void Shape::updateModelMatrix() {
     model = glm::mat4(1.0f);
     model = glm::translate(model, position);
+    model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, scale);
 }
 

@@ -9,24 +9,24 @@
 void DemoScene::load() {
     skybox = std::make_unique<Skybox>("assets/textures/skybox/night.hdr");
 
-    auto floor = std::make_unique<Plane>();
+    auto floor = std::make_shared<Plane>();
     floor->setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
     floor->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
-    shapes.push_back(std::move(floor));
+    shapes.push_back(floor);
 
-    auto sphere = std::make_unique<Sphere>(1.0f);
+    auto sphere = std::make_shared<Sphere>(1.0f);
     sphere->setPosition(glm::vec3(-1.5f, 0.0f, -2.0f));
     sphere->setColor(glm::vec3(1.0f, 0.0f, 0.0f));
-    shapes.push_back(std::move(sphere));
+    shapes.push_back(sphere);
 
-    auto cube = std::make_unique<Cube>();
+    auto cube = std::make_shared<Cube>();
     cube->setPosition(glm::vec3(2.0f, 0.0f, 0.0f));
     auto woodTex = std::make_shared<Texture>("assets/textures/wood.jpg", "texture_albedo");
     cube->addTexture(woodTex);
-    shapes.push_back(std::move(cube));
+    shapes.push_back(cube);
 
     // building
-    auto building = std::make_unique<Model>("assets/models/cartoon_building.obj");
+    auto building = std::make_shared<Model>("assets/models/cartoon_building.obj");
     building->setPosition(glm::vec3(0.0f, -1.1f, 0.0f));
     building->setScale(glm::vec3(0.1f));
 
@@ -45,7 +45,7 @@ void DemoScene::load() {
     auto ao = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_AO.png", "texture_ao");
     building->addTexture(ao);
 
-    shapes.push_back(std::move(building));
+    shapes.push_back(building);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     lightCube = std::make_unique<Cube>();

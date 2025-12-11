@@ -66,6 +66,17 @@ add_executable(${PROJECT_NAME}
         include/PostProcessor.h
         src/HUD.cpp
         include/HUD.h
+        src/LoadingScreen.cpp
+        include/LoadingScreen.h
+        src/Audio.cpp
+        include/Audio.h
+        src/stb_vorbis.c
+        src/Entity.cpp
+        include/Entity.h
+        src/FriendlyEntity.cpp
+        include/FriendlyEntity.h
+        src/EnemyEntity.cpp
+        include/EnemyEntity.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -75,11 +86,16 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${assimp_BINARY_DIR}/include
         ${assimp_SOURCE_DIR}/contrib/unzip
         ${stb_SOURCE_DIR}
+        /opt/homebrew/opt/openal-soft/include
 )
+
+# Use OpenAL-Soft instead of system OpenAL
+find_library(OPENAL_SOFT_LIBRARY openal PATHS /opt/homebrew/opt/openal-soft/lib NO_DEFAULT_PATH)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         glfw
         assimp
         z
         ${CMAKE_DL_LIBS}
+        ${OPENAL_SOFT_LIBRARY}
 )

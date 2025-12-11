@@ -13,7 +13,7 @@ public:
     void draw(Shader& lightingShader, Shader& lampShader, const glm::mat4& view, const glm::mat4& proj) override;
 
 private:
-    std::vector<std::unique_ptr<Shape>> shapes;
+    std::vector<std::shared_ptr<Shape>> shapes;
     std::unique_ptr<Shape> lightCube;
     glm::vec3 lightPos;
     std::unique_ptr<Skybox> skybox;

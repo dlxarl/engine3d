@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "Audio.h"
 #include <iostream>
 
 glm::vec3 cameraPos   = glm::vec3(0.0f, 2.0f,  6.0f);
@@ -15,6 +16,7 @@ Engine::Engine() {
 }
 
 Engine::~Engine() {
+    AudioSystem::getInstance().shutdown();
     glfwTerminate();
 }
 
@@ -52,6 +54,11 @@ int Engine::init(int width, int height, const char* title) {
 
     lightingShader = std::make_unique<Shader>("src/lighting.vert", "src/lighting.frag");
     lampShader     = std::make_unique<Shader>("src/lighting.vert", "src/lamp.frag");
+
+    // Initialize audio system
+    if (!AudioSystem::getInstance().init()) {
+        std::cout << "Warning: Failed to initialize audio system" << std::endl;
+    }
 
     return 0;
 }
@@ -93,6 +100,11 @@ void Engine::update() {
     if (currentScene) {
         currentScene->update(deltaTime);
     }
+
+    // Update audio listener AFTER scene update (so cameraPos is updated)
+    AudioSystem::getInstance().setListenerPosition(cameraPos);
+    AudioSystem::getInstance().setListenerOrientation(cameraFront, cameraUp);
+    AudioSystem::getInstance().update();
 }
 
 void Engine::render() {

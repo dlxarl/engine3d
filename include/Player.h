@@ -8,7 +8,7 @@ class Player : public Cube {
 public:
     Player(glm::vec3 startPos);
 
-    void update(float deltaTime, const std::vector<std::unique_ptr<Shape>>& worldObjects);
+    void update(float deltaTime, const std::vector<std::shared_ptr<Shape>>& worldObjects);
     void move(glm::vec3 direction);
     void jump();
 
@@ -32,5 +32,5 @@ private:
     float playerWidth = 0.8f;
 
     void applyGravity(float deltaTime);
-    void checkCollisions(const std::vector<std::unique_ptr<Shape>>& worldObjects, glm::vec3 velocityStep);
+    void checkCollisions(const std::vector<std::shared_ptr<Shape>>& worldObjects, glm::vec3 velocityStep);
 };

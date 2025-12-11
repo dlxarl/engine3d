@@ -12,7 +12,7 @@ Player::Player(glm::vec3 startPos) {
     isCrouching = false;
 }
 
-void Player::update(float deltaTime, const std::vector<std::unique_ptr<Shape>>& worldObjects) {
+void Player::update(float deltaTime, const std::vector<std::shared_ptr<Shape>>& worldObjects) {
     applyGravity(deltaTime);
 
     float currentYVelocity = velocity.y;
@@ -86,7 +86,7 @@ void Player::applyGravity(float deltaTime) {
     }
 }
 
-void Player::checkCollisions(const std::vector<std::unique_ptr<Shape>>& worldObjects, glm::vec3 velocityStep) {
+void Player::checkCollisions(const std::vector<std::shared_ptr<Shape>>& worldObjects, glm::vec3 velocityStep) {
     for (const auto& obj : worldObjects) {
         if (obj.get() == this) continue;
         if (!obj->hasCollision) continue;

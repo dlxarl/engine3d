@@ -1,11 +1,14 @@
 #include "include/DemoPhysics.h"
 #include "Cube.h"
+#include "Model.h"
 #include "Plane.h"
 #include "Texture.h"
 #include "ShadowMap.h"
 #include "PostProcessor.h"
 #include "Player.h"
 #include "HUD.h"
+#include "FriendlyEntity.h"
+#include "EnemyEntity.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -16,6 +19,7 @@ extern glm::vec3 cameraPos;
 
 void DemoPhysics::load() {
     shapes.clear();
+    entities.clear();
 
     postProcessor = std::make_unique<PostProcessor>(1920, 1080);
     shadowMap = std::make_unique<ShadowMap>();
@@ -24,32 +28,77 @@ void DemoPhysics::load() {
     hud = std::make_unique<HUD>(1920, 1080);
     crosshairTexture = std::make_shared<Texture>("assets/hud/crosshair.png", "texture_diffuse");
 
-    skybox = std::make_unique<Skybox>("assets/skybox/Cold Sunset Equirect.png");
+    skybox = std::make_unique<Skybox>("assets/skybox/night.hdr");
 
     auto grassTexture = std::make_shared<Texture>("assets/textures/grass/albedo.jpg", "texture_albedo");
 
-    auto floor = std::make_unique<Plane>();
+    auto floor = std::make_shared<Plane>();
     floor->setPosition(glm::vec3(0.0f, -2.5f, 0.0f));
     floor->setScale(glm::vec3(40.0f, 0.1f, 40.0f));
     floor->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
     floor->isStatic = true;
     floor->hasCollision = true;
     floor->addTexture(grassTexture);
-    shapes.push_back(std::move(floor));
+    shapes.push_back(floor);
 
-    auto fallingCube = std::make_unique<Cube>();
+    auto fallingCube = std::make_shared<Cube>();
     fallingCube->setPosition(glm::vec3(0.5f, 5.0f, 0.0f));
     fallingCube->setColor(glm::vec3(1.0f, 0.5f, 0.0f));
     fallingCube->useGravity = true;
     fallingCube->hasCollision = true;
-    shapes.push_back(std::move(fallingCube));
+    auto woodTexture = std::make_shared<Texture>("assets/textures/wood.jpg", "texture_albedo");
+    fallingCube->addTexture(woodTexture);
+    shapes.push_back(fallingCube);
 
-    auto floatingCube = std::make_unique<Cube>();
+    auto floatingCube = std::make_shared<Cube>();
     floatingCube->setPosition(glm::vec3(-2.5f, 1.0f, 2.0f));
     floatingCube->setColor(glm::vec3(0.0f, 1.0f, 1.0f));
     floatingCube->useGravity = false;
     floatingCube->hasCollision = true;
-    shapes.push_back(std::move(floatingCube));
+    auto brickTexture = std::make_shared<Texture>("assets/textures/bricks.png", "texture_albedo");
+    floatingCube->addTexture(brickTexture);
+    shapes.push_back(floatingCube);
+
+    speakerPosition = glm::vec3(4.0f, -1.9f, 0.0f);
+    auto speaker = std::make_shared<Model>("assets/models/speaker.fbx");
+    speaker->setPosition(speakerPosition);
+    speaker->setScale(glm::vec3(0.5f));
+    speaker->rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    speaker->useGravity = false;
+    speaker->hasCollision = true;
+    auto albedo_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Base_Colour.png", "texture_albedo");
+    speaker->addTexture(albedo_speaker);
+    auto roughness_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Roughness.png", "texture_roughness");
+    speaker->addTexture(roughness_speaker);
+    shapes.push_back(speaker);
+
+    auto& audio = AudioSystem::getInstance();
+    ALuint songBuffer = audio.loadSound("assets/audio/song.mp3");
+    
+    speakerAudio = audio.createSource3D();
+    speakerAudio->setBuffer(songBuffer);
+    speakerAudio->setPosition(speakerPosition);
+    speakerAudio->setLooping(true);
+    speakerAudio->setVolume(1.0f);
+    speakerAudio->setReferenceDistance(2.0f);
+    speakerAudio->setMaxDistance(30.0f);
+    speakerAudio->setRolloffFactor(1.0f);
+    speakerAudio->play();
+
+    // Create entities
+    // Friendly entity (uses the same speaker model for now)
+    auto friendly = std::make_unique<FriendlyEntity>("assets/models/speaker.fbx", glm::vec3(-3.0f, -1.9f, 3.0f));
+    if (friendly->visualShape) {
+        shapes.push_back(friendly->visualShape);
+    }
+    entities.push_back(std::move(friendly));
+
+    // Enemy entity (uses the same speaker model for now)
+    auto enemy = std::make_unique<EnemyEntity>("assets/models/speaker.fbx", glm::vec3(3.0f, -1.9f, -3.0f));
+    if (enemy->visualShape) {
+        shapes.push_back(enemy->visualShape);
+    }
+    entities.push_back(std::move(enemy));
 
     lightPos = glm::vec3(40.0f, 5.0f, -5.0f);
     lightCube = std::make_unique<Cube>();
@@ -131,6 +180,17 @@ void DemoPhysics::update(float deltaTime) {
     player->update(deltaTime, shapes);
 
     cameraPos = player->getCameraPosition();
+
+    // Update entities
+    for (auto& entity : entities) {
+        entity->update(deltaTime);
+        
+        // If it's an enemy, make it follow the player
+        EnemyEntity* enemy = dynamic_cast<EnemyEntity*>(entity.get());
+        if (enemy && enemy->isAlive) {
+            enemy->setTargetPosition(cameraPos);
+        }
+    }
 }
 
 void DemoPhysics::renderScene(Shader& shader) {
@@ -152,7 +212,6 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
     int scrWidth, scrHeight;
     glfwGetFramebufferSize(glfwGetCurrentContext(), &scrWidth, &scrHeight);
 
-    // ОПТИМІЗАЦІЯ: Зменшено Frustum з 60 до 35 для вищої щільності тіней
     glm::mat4 lightProjection, lightView, lightSpaceMatrix;
     float near_plane = 1.0f, far_plane = 200.0f;
 
@@ -199,8 +258,6 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-
-    // Куб джерела світла прибрано - світло невидиме
 
     if (skybox) {
         skybox->draw(view, proj);
