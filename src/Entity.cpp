@@ -13,6 +13,7 @@ Entity::Entity() :
     position(0.0f),
     velocity(0.0f),
     direction(0.0f, 0.0f, 1.0f), // Напрямлений вперед за замовчуванням
+    scale(1.0f), // Масштаб за замовчуванням
     visualShape(nullptr)
 {
 }
@@ -70,4 +71,11 @@ void Entity::move(glm::vec3 moveDirection) {
 
     // Додаємо швидкість у напрямку руху
     velocity += moveDirection * moveSpeed;
+}
+
+void Entity::setScale(glm::vec3 newScale) {
+    scale = newScale;
+    if (visualShape) {
+        visualShape->setScale(scale);
+    }
 }

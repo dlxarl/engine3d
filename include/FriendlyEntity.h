@@ -5,14 +5,12 @@
 
 class FriendlyEntity : public Entity {
 public:
-    FriendlyEntity(const std::string& modelPath, glm::vec3 startPosition);
+    FriendlyEntity(const std::string& modelPath, glm::vec3 startPosition, glm::vec3 entityScale = glm::vec3(0.3f));
 
     void update(float deltaTime) override;
     void onDamage(float damage) override;
     void onDeath() override;
 
 private:
-    float wanderTimer;
-    glm::vec3 wanderDirection;
-    float changeDirectionTime;
+    // AI variables removed - no movement for now
 };

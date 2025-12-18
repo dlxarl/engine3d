@@ -25,12 +25,16 @@ public:
     glm::vec3 position;
     glm::vec3 velocity;
     glm::vec3 direction; // Напрямок руху
+    glm::vec3 scale; // Масштаб ентіті
 
     // Методи життєвого циклу
     virtual void update(float deltaTime);
     virtual void takeDamage(float damage);
     virtual void die();
     virtual void move(glm::vec3 direction);
+
+    // Масштабування
+    void setScale(glm::vec3 newScale);
 
     // Гетери та сетери
     bool isDead() const { return !isAlive; }

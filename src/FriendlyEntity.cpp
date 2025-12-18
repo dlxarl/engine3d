@@ -1,8 +1,8 @@
 #include "FriendlyEntity.h"
-#include <glm/gtc/random.hpp>
+// #include <glm/gtc/random.hpp> // Removed - no longer using random functions
 #include <iostream>
 
-FriendlyEntity::FriendlyEntity(const std::string& modelPath, glm::vec3 startPosition) {
+FriendlyEntity::FriendlyEntity(const std::string& modelPath, glm::vec3 startPosition, glm::vec3 entityScale) {
     // Ініціалізуємо базові властивості Entity
     health = 50.0f;
     maxHealth = 50.0f;
@@ -13,21 +13,21 @@ FriendlyEntity::FriendlyEntity(const std::string& modelPath, glm::vec3 startPosi
     // Створюємо візуальне представлення (3D модель)
     visualShape = std::make_shared<Model>(modelPath);
     visualShape->setPosition(position);
-    visualShape->setScale(glm::vec3(0.3f)); // Менший розмір для дружніх ентіті
     visualShape->useGravity = false;
     visualShape->hasCollision = true;
 
-    // Ініціалізуємо AI змінні
-    wanderTimer = 0.0f;
-    changeDirectionTime = glm::linearRand(2.0f, 5.0f);
-    wanderDirection = glm::normalize(glm::vec3(
-        glm::linearRand(-1.0f, 1.0f),
-        0.0f,
-        glm::linearRand(-1.0f, 1.0f)
-    ));
+    // Встановлюємо масштаб
+    setScale(entityScale);
+
+    // Додаємо текстуру для кота
+    if (modelPath.find("cat.obj") != std::string::npos) {
+        auto catTexture = std::make_shared<Texture>("assets/textures/cat.jpg", "texture_albedo");
+        visualShape->addTexture(catTexture);
+    }
 
     std::cout << "FriendlyEntity created at position: (" 
-              << position.x << ", " << position.y << ", " << position.z << ")" << std::endl;
+              << position.x << ", " << position.y << ", " << position.z << ") with scale: ("
+              << scale.x << ", " << scale.y << ", " << scale.z << ")" << std::endl;
 }
 
 void FriendlyEntity::update(float deltaTime) {
@@ -36,22 +36,7 @@ void FriendlyEntity::update(float deltaTime) {
     // Викликаємо базове оновлення
     Entity::update(deltaTime);
 
-    // AI поведінка: випадковий рух
-    wanderTimer += deltaTime;
-
-    if (wanderTimer >= changeDirectionTime) {
-        // Змінюємо напрямок руху
-        wanderDirection = glm::normalize(glm::vec3(
-            glm::linearRand(-1.0f, 1.0f),
-            0.0f,
-            glm::linearRand(-1.0f, 1.0f)
-        ));
-        changeDirectionTime = glm::linearRand(2.0f, 5.0f);
-        wanderTimer = 0.0f;
-    }
-
-    // Рухаємося у поточному напрямку
-    move(wanderDirection * 0.5f); // Повільний рух
+    // Поки що не рухаємося
 }
 
 void FriendlyEntity::onDamage(float damage) {

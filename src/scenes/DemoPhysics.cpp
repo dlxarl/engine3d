@@ -13,6 +13,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+#include "Sphere.h"
+
 extern glm::vec3 cameraFront;
 extern glm::vec3 cameraUp;
 extern glm::vec3 cameraPos;
@@ -59,46 +61,53 @@ void DemoPhysics::load() {
     floatingCube->addTexture(brickTexture);
     shapes.push_back(floatingCube);
 
-    speakerPosition = glm::vec3(4.0f, -1.9f, 0.0f);
-    auto speaker = std::make_shared<Model>("assets/models/speaker.fbx");
-    speaker->setPosition(speakerPosition);
-    speaker->setScale(glm::vec3(0.5f));
-    speaker->rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    speaker->useGravity = false;
-    speaker->hasCollision = true;
-    auto albedo_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Base_Colour.png", "texture_albedo");
-    speaker->addTexture(albedo_speaker);
-    auto roughness_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Roughness.png", "texture_roughness");
-    speaker->addTexture(roughness_speaker);
-    shapes.push_back(speaker);
+    auto floatingSphere = std::make_shared<Sphere>(1.0f);
+    floatingSphere->setPosition(glm::vec3(2.5f, 1.0f, 2.0f));
+    floatingSphere->setColor(glm::vec3(1.0f, 0.0f, 0.0f));
+    floatingSphere->useGravity = false;
+    floatingSphere->hasCollision = true;
+    shapes.push_back(floatingSphere);
 
-    auto& audio = AudioSystem::getInstance();
-    ALuint songBuffer = audio.loadSound("assets/audio/song.mp3");
-    
-    speakerAudio = audio.createSource3D();
-    speakerAudio->setBuffer(songBuffer);
-    speakerAudio->setPosition(speakerPosition);
-    speakerAudio->setLooping(true);
-    speakerAudio->setVolume(1.0f);
-    speakerAudio->setReferenceDistance(2.0f);
-    speakerAudio->setMaxDistance(30.0f);
-    speakerAudio->setRolloffFactor(1.0f);
-    speakerAudio->play();
+    // speakerPosition = glm::vec3(4.0f, -1.9f, 0.0f);
+    // auto speaker = std::make_shared<Model>("assets/models/speaker.fbx");
+    // speaker->setPosition(speakerPosition);
+    // speaker->setScale(glm::vec3(0.5f));
+    // speaker->rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    // speaker->useGravity = false;
+    // speaker->hasCollision = true;
+    // auto albedo_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Base_Colour.png", "texture_albedo");
+    // speaker->addTexture(albedo_speaker);
+    // auto roughness_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Roughness.png", "texture_roughness");
+    // speaker->addTexture(roughness_speaker);
+    // shapes.push_back(speaker);
+    //
+    // auto& audio = AudioSystem::getInstance();
+    // ALuint songBuffer = audio.loadSound("assets/audio/song.mp3");
+    //
+    // speakerAudio = audio.createSource3D();
+    // speakerAudio->setBuffer(songBuffer);
+    // speakerAudio->setPosition(speakerPosition);
+    // speakerAudio->setLooping(true);
+    // speakerAudio->setVolume(1.0f);
+    // speakerAudio->setReferenceDistance(2.0f);
+    // speakerAudio->setMaxDistance(30.0f);
+    // speakerAudio->setRolloffFactor(1.0f);
+    // speakerAudio->play();
 
-    // Create entities
-    // Friendly entity (uses the same speaker model for now)
-    auto friendly = std::make_unique<FriendlyEntity>("assets/models/speaker.fbx", glm::vec3(-3.0f, -1.9f, 3.0f));
-    if (friendly->visualShape) {
-        shapes.push_back(friendly->visualShape);
-    }
-    entities.push_back(std::move(friendly));
-
-    // Enemy entity (uses the same speaker model for now)
-    auto enemy = std::make_unique<EnemyEntity>("assets/models/speaker.fbx", glm::vec3(3.0f, -1.9f, -3.0f));
-    if (enemy->visualShape) {
-        shapes.push_back(enemy->visualShape);
-    }
-    entities.push_back(std::move(enemy));
+    // Entities
+    // Friendly entity
+    // auto friendly = std::make_unique<FriendlyEntity>("assets/models/cat.obj", glm::vec3(-3.0f, -1.9f, 3.0f), glm::vec3(0.01f));
+    // if (friendly->visualShape) {
+    //     shapes.push_back(friendly->visualShape);
+    // }
+    // entities.push_back(std::move(friendly));
+    //
+    // // Enemy entity
+    // auto enemy = std::make_unique<EnemyEntity>("assets/models/wolf.obj", glm::vec3(3.0f, -3.0f, -3.0f), glm::vec3(2.2f));
+    // if (enemy->visualShape) {
+    //     shapes.push_back(enemy->visualShape);
+    // }
+    // entities.push_back(std::move(enemy));
 
     lightPos = glm::vec3(40.0f, 5.0f, -5.0f);
     lightCube = std::make_unique<Cube>();
@@ -169,7 +178,7 @@ void DemoPhysics::update(float deltaTime) {
     if (glm::length(moveDir) > 0) moveDir = glm::normalize(moveDir);
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) player->runSpeed = 8.0f;
-    else player->runSpeed = 4.0f;
+    else player->runSpeed = 6.0f;
 
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) player->setCrouch(true);
     else player->setCrouch(false);
@@ -181,11 +190,9 @@ void DemoPhysics::update(float deltaTime) {
 
     cameraPos = player->getCameraPosition();
 
-    // Update entities
     for (auto& entity : entities) {
         entity->update(deltaTime);
         
-        // If it's an enemy, make it follow the player
         EnemyEntity* enemy = dynamic_cast<EnemyEntity*>(entity.get());
         if (enemy && enemy->isAlive) {
             enemy->setTargetPosition(cameraPos);
