@@ -12,8 +12,8 @@ Sphere::Sphere(float radius, int sectorCount, int stackCount) {
     float nx, ny, nz, lengthInv = 1.0f / radius;
     float s, t;
 
-    float sectorStep = 2 * PI / sectorCount;
-    float stackStep = PI / stackCount;
+    float sectorStep = 2 * PI / sectorCount; // krok w poziomie (sektory)
+    float stackStep = PI / stackCount; // krok w pionie (stacki)
     float sectorAngle, stackAngle;
 
     for(int i = 0; i <= stackCount; ++i)
@@ -29,10 +29,12 @@ Sphere::Sphere(float radius, int sectorCount, int stackCount) {
             x = xy * cosf(sectorAngle);
             y = xy * sinf(sectorAngle);
 
+            // Pozycja wierzchołka
             vertices.push_back(x);
             vertices.push_back(z);
             vertices.push_back(y);
 
+            // Normalna
             nx = x * lengthInv;
             ny = z * lengthInv;
             nz = y * lengthInv;
@@ -40,7 +42,7 @@ Sphere::Sphere(float radius, int sectorCount, int stackCount) {
             vertices.push_back(ny);
             vertices.push_back(nz);
 
-            // 3. TexCoords (s, t)
+            // Współrzędne tekstury
             s = (float)j / sectorCount;
             t = (float)i / stackCount;
             vertices.push_back(s);
@@ -48,6 +50,8 @@ Sphere::Sphere(float radius, int sectorCount, int stackCount) {
         }
     }
 
+
+    // Generowanie indeksów (trójkąty)
     for(int i = 0; i < stackCount; ++i)
     {
         int k1 = i * (sectorCount + 1);

@@ -4,9 +4,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
+
 #include "Input.h"
 #include "Shader.h"
 #include "Scene.h"
+#include "ShadowMap.h"
 
 extern glm::vec3 cameraPos;
 extern glm::vec3 cameraFront;
@@ -26,8 +28,15 @@ private:
     int width, height;
 
     std::unique_ptr<Input> input;
+
     std::unique_ptr<Shader> lightingShader;
     std::unique_ptr<Shader> lampShader;
+    std::unique_ptr<Shader> depthShader;
+
+    std::unique_ptr<ShadowMap> shadowMap;
+
+    glm::mat4 lightSpaceMatrix;
+
     std::shared_ptr<Scene> currentScene;
 
     float deltaTime;

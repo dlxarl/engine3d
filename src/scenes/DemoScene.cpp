@@ -2,12 +2,11 @@
 #include "Cube.h"
 #include "Plane.h"
 #include "Sphere.h"
-#include "Model.h"
 #include "Texture.h"
 #include <GLFW/glfw3.h>
 
 void DemoScene::load() {
-    skybox = std::make_unique<Skybox>("assets/textures/skybox/night.hdr");
+    //skybox = std::make_unique<Skybox>("assets/textures/skybox/night.hdr");
 
     auto floor = std::make_shared<Plane>();
     floor->setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
@@ -25,27 +24,7 @@ void DemoScene::load() {
     cube->addTexture(woodTex);
     shapes.push_back(cube);
 
-    // building
-    auto building = std::make_shared<Model>("assets/models/cartoon_building.obj");
-    building->setPosition(glm::vec3(0.0f, -1.1f, 0.0f));
-    building->setScale(glm::vec3(0.1f));
 
-    auto albedo = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Albedo.png", "texture_albedo");
-    building->addTexture(albedo);
-
-    auto normal = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Normal.png", "texture_normal");
-    building->addTexture(normal);
-
-    auto roughness = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Roughness.png", "texture_roughness");
-    building->addTexture(roughness);
-
-    auto metallic = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_Metallic.png", "texture_metallic");
-    building->addTexture(metallic);
-
-    auto ao = std::make_shared<Texture>("assets/textures/cartoon_building/cartoon_building_AO.png", "texture_ao");
-    building->addTexture(ao);
-
-    shapes.push_back(building);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     lightCube = std::make_unique<Cube>();
@@ -53,30 +32,54 @@ void DemoScene::load() {
     lightCube->setScale(glm::vec3(0.2f));
 }
 
-void DemoScene::update(float deltaTime) {
+void DemoScene::update(float /*deltaTime*/) {
     lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
     lightPos.z = sin(glfwGetTime() / 2.0f) * 1.0f;
     lightCube->setPosition(lightPos);
 }
 
-void DemoScene::draw(Shader& lightingShader, Shader& lampShader, const glm::mat4& view, const glm::mat4& proj) {
-    lightingShader.use();
+void DemoScene::draw(Shader& lightingShader, Shader& lampShader,
+                     const glm::mat4& view, const glm::mat4& proj)
+{
+    // Engine вже зробив lightingShader.use() і встановив:
+    // projection, view, viewPos, lightSpaceMatrix, shadowMap
+    // Тут задаємо тільки те, що змінюється в сцені:
     lightingShader.setVec3("lightPos", lightPos);
-    lightingShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    lightingShader.setVec3("lightColor", glm::vec3(1.0f));
 
+    // Якщо ви не використовуєте culling — можна не чіпати.
+    // Але якщо в проекті він увімкнений десь глобально — краще вимкнути для стабільності демо:
     glDisable(GL_CULL_FACE);
 
     for (const auto& shape : shapes) {
         lightingShader.setVec3("objectColor", shape->getColor());
-        shape->draw(lightingShader);
+        shape->draw(lightingShader); // shape всередині ставить model
     }
 
-    glEnable(GL_CULL_FACE);
-
+    // Лампа (кубик світла)
     lampShader.use();
+    lampShader.setMat4("projection", proj);
+    lampShader.setMat4("view", view);
+    lightCube->setPosition(lightPos);
     lightCube->draw(lampShader);
 
+    // Skybox
     if (skybox) {
         skybox->draw(view, proj);
+    }
+}
+
+void DemoScene::drawDepth(Shader& depthShader)
+{
+    // Engine вже міг зробити depthShader.use(), але ок якщо і тут:
+    depthShader.use();
+
+    // Для тіней інколи корисно включити culling front face (боротьба з shadow acne),
+    // але це опційно. Якщо хочеш — скажу як правильно.
+    // Поки максимально просто:
+    glDisable(GL_CULL_FACE);
+
+    for (const auto& shape : shapes) {
+        shape->draw(depthShader); // тільки геометрія, без лампи, без skybox
     }
 }

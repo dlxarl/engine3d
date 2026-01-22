@@ -1,27 +1,30 @@
 #include "include/DemoPhysics.h"
 #include "Cube.h"
-#include "Model.h"
 #include "Plane.h"
 #include "Texture.h"
 #include "ShadowMap.h"
 #include "PostProcessor.h"
 #include "Player.h"
 #include "HUD.h"
-#include "FriendlyEntity.h"
-#include "EnemyEntity.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-
 #include "Sphere.h"
 
 extern glm::vec3 cameraFront;
 extern glm::vec3 cameraUp;
 extern glm::vec3 cameraPos;
 
+// Активний об’єкт
+static std::shared_ptr<Shape> g_controlledShape = nullptr;
+static int g_controlledIndex = 0;
+
+// Освітлення і тіні
+static bool g_enableLighting = true;
+static bool g_enableShadows = true;
+
 void DemoPhysics::load() {
     shapes.clear();
-    entities.clear();
 
     postProcessor = std::make_unique<PostProcessor>(1920, 1080);
     shadowMap = std::make_unique<ShadowMap>();
@@ -68,46 +71,9 @@ void DemoPhysics::load() {
     floatingSphere->hasCollision = true;
     shapes.push_back(floatingSphere);
 
-    // speakerPosition = glm::vec3(4.0f, -1.9f, 0.0f);
-    // auto speaker = std::make_shared<Model>("assets/models/speaker.fbx");
-    // speaker->setPosition(speakerPosition);
-    // speaker->setScale(glm::vec3(0.5f));
-    // speaker->rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    // speaker->useGravity = false;
-    // speaker->hasCollision = true;
-    // auto albedo_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Base_Colour.png", "texture_albedo");
-    // speaker->addTexture(albedo_speaker);
-    // auto roughness_speaker = std::make_shared<Texture>("assets/textures/speaker/Speaker_Roughness.png", "texture_roughness");
-    // speaker->addTexture(roughness_speaker);
-    // shapes.push_back(speaker);
-    //
-    // auto& audio = AudioSystem::getInstance();
-    // ALuint songBuffer = audio.loadSound("assets/audio/song.mp3");
-    //
-    // speakerAudio = audio.createSource3D();
-    // speakerAudio->setBuffer(songBuffer);
-    // speakerAudio->setPosition(speakerPosition);
-    // speakerAudio->setLooping(true);
-    // speakerAudio->setVolume(1.0f);
-    // speakerAudio->setReferenceDistance(2.0f);
-    // speakerAudio->setMaxDistance(30.0f);
-    // speakerAudio->setRolloffFactor(1.0f);
-    // speakerAudio->play();
-
-    // Entities
-    // Friendly entity
-    // auto friendly = std::make_unique<FriendlyEntity>("assets/models/cat.obj", glm::vec3(-3.0f, -1.9f, 3.0f), glm::vec3(0.01f));
-    // if (friendly->visualShape) {
-    //     shapes.push_back(friendly->visualShape);
-    // }
-    // entities.push_back(std::move(friendly));
-    //
-    // // Enemy entity
-    // auto enemy = std::make_unique<EnemyEntity>("assets/models/wolf.obj", glm::vec3(3.0f, -3.0f, -3.0f), glm::vec3(2.2f));
-    // if (enemy->visualShape) {
-    //     shapes.push_back(enemy->visualShape);
-    // }
-    // entities.push_back(std::move(enemy));
+    // Активний об’єкт — перший у списку
+    g_controlledIndex = 0;
+    g_controlledShape = shapes[g_controlledIndex];
 
     lightPos = glm::vec3(40.0f, 5.0f, -5.0f);
     lightCube = std::make_unique<Cube>();
@@ -121,11 +87,47 @@ void DemoPhysics::load() {
 void DemoPhysics::update(float deltaTime) {
     GLFWwindow* window = glfwGetCurrentContext();
 
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+    // Перезавантаження сцени — тепер на T
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
         load();
         return;
     }
 
+    // Перемикання об’єкта на N
+    static bool nPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !nPressed) {
+        nPressed = true;
+
+        g_controlledIndex++;
+        if (g_controlledIndex >= shapes.size())
+            g_controlledIndex = 0;
+
+        g_controlledShape = shapes[g_controlledIndex];
+        std::cout << "Selected object #" << g_controlledIndex << std::endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE) {
+        nPressed = false;
+    }
+
+    // Перемикач освітлення (L)
+    static bool lPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !lPressed) {
+        lPressed = true;
+        g_enableLighting = !g_enableLighting;
+        std::cout << "Lighting: " << (g_enableLighting ? "ON" : "OFF") << std::endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE) lPressed = false;
+
+    // Перемикач тіней (K)
+    static bool kPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS && !kPressed) {
+        kPressed = true;
+        g_enableShadows = !g_enableShadows;
+        std::cout << "Shadows: " << (g_enableShadows ? "ON" : "OFF") << std::endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_RELEASE) kPressed = false;
+
+    // Постпроцесинг
     static bool mKeyPressed = false;
     if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mKeyPressed) {
         postProcessor->enabled = !postProcessor->enabled;
@@ -136,14 +138,14 @@ void DemoPhysics::update(float deltaTime) {
         mKeyPressed = false;
     }
 
+    // Фізика
     float gravity = -19.6f;
 
     for (auto& object : shapes) {
         if (object->isStatic) continue;
 
-        if (object->useGravity) {
+        if (object->useGravity)
             object->velocity.y += gravity * deltaTime;
-        }
 
         glm::vec3 oldPosition = object->position;
         object->setPosition(object->position + object->velocity * deltaTime);
@@ -166,6 +168,54 @@ void DemoPhysics::update(float deltaTime) {
         }
     }
 
+    // Рух активного об’єкта стрілками
+    // Рух активного об’єкта стрілками + + і -
+    if (g_controlledShape) {
+        glm::vec3 pos = g_controlledShape->position;
+        float moveSpeed = 3.0f * deltaTime;
+
+        // XZ рух
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)    pos.z -= moveSpeed;
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  pos.z += moveSpeed;
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)  pos.x -= moveSpeed;
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) pos.x += moveSpeed;
+
+        // Y рух (вгору/вниз)
+        if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS)
+            pos.y += moveSpeed;
+
+        if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS)
+            pos.y -= moveSpeed;
+
+        g_controlledShape->setPosition(pos);
+    }
+
+
+    // --- Трансформації R/I/O ---
+    if (g_controlledShape) {
+
+        // R — обертання
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+            g_controlledShape->rotate(90.0f * deltaTime, glm::vec3(0, 1, 0));
+        }
+
+        // I — збільшення
+        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+            glm::vec3 sc = g_controlledShape->scale;
+            sc += glm::vec3(1.0f) * deltaTime;
+            g_controlledShape->setScale(sc);
+        }
+
+        // O — зменшення
+        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+            glm::vec3 sc = g_controlledShape->scale;
+            sc -= glm::vec3(1.0f) * deltaTime;
+            sc = glm::max(sc, glm::vec3(0.1f));
+            g_controlledShape->setScale(sc);
+        }
+    }
+
+    // Рух гравця
     glm::vec3 moveDir = glm::vec3(0.0f);
     glm::vec3 flatFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
     glm::vec3 flatRight = glm::normalize(glm::cross(flatFront, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -177,8 +227,7 @@ void DemoPhysics::update(float deltaTime) {
 
     if (glm::length(moveDir) > 0) moveDir = glm::normalize(moveDir);
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) player->runSpeed = 8.0f;
-    else player->runSpeed = 6.0f;
+    player->runSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ? 8.0f : 6.0f;
 
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) player->setCrouch(true);
     else player->setCrouch(false);
@@ -189,15 +238,6 @@ void DemoPhysics::update(float deltaTime) {
     player->update(deltaTime, shapes);
 
     cameraPos = player->getCameraPosition();
-
-    for (auto& entity : entities) {
-        entity->update(deltaTime);
-        
-        EnemyEntity* enemy = dynamic_cast<EnemyEntity*>(entity.get());
-        if (enemy && enemy->isAlive) {
-            enemy->setTargetPosition(cameraPos);
-        }
-    }
 }
 
 void DemoPhysics::renderScene(Shader& shader) {
@@ -255,6 +295,10 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
     lightingShader.setVec3("viewPos", cameraPos);
     lightingShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
+    // Передаємо прапорці освітлення і тіней
+    lightingShader.setInt("enableLighting", g_enableLighting ? 1 : 0);
+    lightingShader.setInt("enableShadows", g_enableShadows ? 1 : 0);
+
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, shadowMap->depthMap);
     lightingShader.setInt("shadowMap", 10);
@@ -290,4 +334,8 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
 
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
+}
+
+void DemoPhysics::drawDepth(Shader& depthShader) {
+    renderScene(depthShader);
 }

@@ -1,6 +1,7 @@
 #include "Cube.h"
 
 Cube::Cube() {
+    // Tablica z danymi wierzchołków (pozycja, normalna (kierunek powierzchni), współrzędne tekstury)
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
          0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
@@ -44,7 +45,7 @@ Cube::Cube() {
          0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
-
+    // 6 scian x 2 trojkaty na sciane x 3 wierzcholki na trojkat = 36 wierzcholkow
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
@@ -53,12 +54,16 @@ Cube::Cube() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    // atrybuty wierzchołków
+    // pozycja
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    // normalna
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    // współrzędne UV
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
@@ -69,12 +74,14 @@ Cube::Cube() {
 void Cube::draw(Shader& shader) {
     shader.setMat4("model", model);
 
+    shader.setVec3("objectColor", color);
     shader.setBool("material.hasAlbedo", false);
     shader.setBool("material.hasNormal", false);
     shader.setBool("material.hasMetallic", false);
     shader.setBool("material.hasRoughness", false);
     shader.setBool("material.hasAO", false);
 
+    // Sprawdzamy jakie tekstury sa przypisane do obiektu
     for(unsigned int i = 0; i < textures.size(); i++) {
         std::string name = textures[i]->type;
 

@@ -6,10 +6,6 @@
 #include "ShadowMap.h"
 #include "Player.h"
 #include "HUD.h"
-#include "Audio.h"
-#include "Entity.h"
-#include "FriendlyEntity.h"
-#include "EnemyEntity.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
@@ -22,10 +18,11 @@ public:
 
     void drawShadow(Shader& shadowShader) override;
     glm::vec3 getLightPos() const override;
+    void drawDepth(Shader& depthShader) override;
 
 private:
     std::vector<std::shared_ptr<Shape>> shapes;
-    std::vector<std::unique_ptr<Entity>> entities;
+
     std::unique_ptr<Shape> lightCube;
     glm::vec3 lightPos;
     std::unique_ptr<Skybox> skybox;
@@ -38,9 +35,7 @@ private:
     std::unique_ptr<HUD> hud;
     std::shared_ptr<Texture> crosshairTexture;
 
-    // Audio
-    std::shared_ptr<AudioSource3D> speakerAudio;
-    glm::vec3 speakerPosition;
+
 
     void renderScene(Shader& shader);
 };

@@ -6,96 +6,69 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
-FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.3.8)
+# GLFW
+FetchContent_Declare(glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.3.8
+)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
-FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git GIT_TAG 1.0.1)
-set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
+# GLM
+FetchContent_Declare(glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 1.0.1
+)
 FetchContent_MakeAvailable(glm)
 
-FetchContent_Declare(assimp GIT_REPOSITORY https://github.com/assimp/assimp.git GIT_TAG v5.4.3)
-
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
-set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_MINIZIP ON CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(assimp)
-
-FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git GIT_TAG master)
+# stb
+FetchContent_Declare(stb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        GIT_TAG master
+)
 FetchContent_MakeAvailable(stb)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/glad.c
+
         src/Engine.cpp
-        include/Engine.h
         src/Input.cpp
-        include/Input.h
-        src/Shape.cpp
-        include/Shape.h
-        src/Cube.cpp
-        include/Cube.h
         src/Shader.cpp
-        include/Shader.h
-        include/Scene.h
-        src/scenes/DemoScene.cpp
-        src/scenes/include/DemoScene.h
-        src/Plane.cpp
-        include/Plane.h
-        src/Sphere.cpp
-        include/Sphere.h
-        src/Model.cpp
-        include/Model.h
-        ${assimp_SOURCE_DIR}/contrib/unzip/unzip.c
-        ${assimp_SOURCE_DIR}/contrib/unzip/ioapi.c
         src/Texture.cpp
-        include/Texture.h
+        src/stb_image_impl.cpp   # <- ДОДАЙ
+
+        src/Shape.cpp
+        src/Cube.cpp
+        src/Plane.cpp
+        src/Sphere.cpp
+
         src/Skybox.cpp
-        include/Skybox.h
-        src/scenes/DemoPhysics.cpp
-        src/scenes/include/DemoPhysics.h
-        src/Player.cpp
-        include/Player.h
-        include/ShadowMap.h
-        src/PostProcessor.cpp
-        include/PostProcessor.h
         src/HUD.cpp
-        include/HUD.h
-        src/LoadingScreen.cpp
-        include/LoadingScreen.h
-        src/Audio.cpp
-        include/Audio.h
-        src/stb_vorbis.c
-        src/Entity.cpp
-        include/Entity.h
-        src/FriendlyEntity.cpp
-        include/FriendlyEntity.h
-        src/EnemyEntity.cpp
-        include/EnemyEntity.h
+        src/PostProcessor.cpp
+        src/Player.cpp
+
+        # Scenes
+        src/scenes/DemoScene.cpp
+        src/scenes/DemoPhysics.cpp
+)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+        PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-        include
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/scenes/include
         ${glm_SOURCE_DIR}
-        ${assimp_SOURCE_DIR}/include
-        ${assimp_BINARY_DIR}/include
-        ${assimp_SOURCE_DIR}/contrib/unzip
         ${stb_SOURCE_DIR}
-        /opt/homebrew/opt/openal-soft/include
 )
-
-# Use OpenAL-Soft instead of system OpenAL
-find_library(OPENAL_SOFT_LIBRARY openal PATHS /opt/homebrew/opt/openal-soft/lib NO_DEFAULT_PATH)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         glfw
-        assimp
-        z
-        ${CMAKE_DL_LIBS}
-        ${OPENAL_SOFT_LIBRARY}
 )
+
+if (WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE opengl32 gdi32 user32 winmm shell32)
+endif()
