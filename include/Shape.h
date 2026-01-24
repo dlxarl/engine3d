@@ -33,6 +33,7 @@ public:
 
 protected:
     unsigned int VAO, VBO;
+    int vertexCount = 0;
     glm::mat4 model;
     glm::vec3 color;
     std::vector<std::shared_ptr<Texture>> textures;

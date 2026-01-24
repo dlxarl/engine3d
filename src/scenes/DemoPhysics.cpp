@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include "Sphere.h"
-
+#include "Cylinder.h"
 extern glm::vec3 cameraFront;
 extern glm::vec3 cameraUp;
 extern glm::vec3 cameraPos;
@@ -56,7 +56,7 @@ void DemoPhysics::load() {
     shapes.push_back(fallingCube);
 
     auto floatingCube = std::make_shared<Cube>();
-    floatingCube->setPosition(glm::vec3(-2.5f, 1.0f, 2.0f));
+    floatingCube->setPosition(glm::vec3(-2.5f, 0.0f, 2.0f));
     floatingCube->setColor(glm::vec3(0.0f, 1.0f, 1.0f));
     floatingCube->useGravity = false;
     floatingCube->hasCollision = true;
@@ -71,6 +71,13 @@ void DemoPhysics::load() {
     floatingSphere->hasCollision = true;
     shapes.push_back(floatingSphere);
 
+    auto cylinder = std::make_shared<Cylinder>(0.5f, 1.5f, 32);
+    cylinder->setPosition(glm::vec3(0.0f, 0.0f, -3.0f));
+    cylinder->setColor(glm::vec3(0.7f, 0.2f, 1.0f));
+    cylinder->useGravity = false;
+    cylinder->hasCollision = true;
+    shapes.push_back(cylinder);
+
     // Активний об’єкт — перший у списку
     g_controlledIndex = 0;
     g_controlledShape = shapes[g_controlledIndex];
@@ -80,7 +87,7 @@ void DemoPhysics::load() {
     lightCube->setPosition(lightPos);
     lightCube->setScale(glm::vec3(0.5f));
 
-    player = std::make_shared<Player>(glm::vec3(0.0f, -1.5f, 2.0f));
+    player = std::make_shared<Player>(glm::vec3(0.0f, 0.5f, 2.0f));
     player->setGrounded(true);
 }
 
@@ -169,7 +176,6 @@ void DemoPhysics::update(float deltaTime) {
     }
 
     // Рух активного об’єкта стрілками
-    // Рух активного об’єкта стрілками + + і -
     if (g_controlledShape) {
         glm::vec3 pos = g_controlledShape->position;
         float moveSpeed = 3.0f * deltaTime;
@@ -191,7 +197,7 @@ void DemoPhysics::update(float deltaTime) {
     }
 
 
-    // --- Трансформації R/I/O ---
+    //Трансформації R/I/O
     if (g_controlledShape) {
 
         // R — обертання

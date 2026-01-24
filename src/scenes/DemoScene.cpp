@@ -9,7 +9,7 @@ void DemoScene::load() {
     //skybox = std::make_unique<Skybox>("assets/textures/skybox/night.hdr");
 
     auto floor = std::make_shared<Plane>();
-    floor->setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
+    floor->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     floor->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
     shapes.push_back(floor);
 
@@ -19,7 +19,7 @@ void DemoScene::load() {
     shapes.push_back(sphere);
 
     auto cube = std::make_shared<Cube>();
-    cube->setPosition(glm::vec3(2.0f, 0.0f, 0.0f));
+    cube->setPosition(glm::vec3(3.0f, -1.0f, 0.0f));
     auto woodTex = std::make_shared<Texture>("assets/textures/wood.jpg", "texture_albedo");
     cube->addTexture(woodTex);
     shapes.push_back(cube);

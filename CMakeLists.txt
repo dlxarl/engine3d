@@ -53,6 +53,8 @@ add_executable(${PROJECT_NAME}
         # Scenes
         src/scenes/DemoScene.cpp
         src/scenes/DemoPhysics.cpp
+        include/Cylinder.h
+        src/Cylinder.cpp
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE
         PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
