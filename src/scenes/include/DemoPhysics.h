@@ -5,7 +5,6 @@
 #include "PostProcessor.h"
 #include "ShadowMap.h"
 #include "Player.h"
-#include "HUD.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
@@ -32,8 +31,7 @@ private:
     std::unique_ptr<Shader> depthShader;
     std::shared_ptr<Player> player;
 
-    std::unique_ptr<HUD> hud;
-    std::shared_ptr<Texture> crosshairTexture;
+
 
 
 

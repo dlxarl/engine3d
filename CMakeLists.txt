@@ -38,7 +38,7 @@ add_executable(${PROJECT_NAME}
         src/Input.cpp
         src/Shader.cpp
         src/Texture.cpp
-        src/stb_image_impl.cpp   # <- ДОДАЙ
+        src/stb_image_impl.cpp
 
         src/Shape.cpp
         src/Cube.cpp
@@ -46,7 +46,6 @@ add_executable(${PROJECT_NAME}
         src/Sphere.cpp
 
         src/Skybox.cpp
-        src/HUD.cpp
         src/PostProcessor.cpp
         src/Player.cpp
 

@@ -5,7 +5,6 @@
 #include "ShadowMap.h"
 #include "PostProcessor.h"
 #include "Player.h"
-#include "HUD.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -30,8 +29,6 @@ void DemoPhysics::load() {
     shadowMap = std::make_unique<ShadowMap>();
     depthShader = std::make_unique<Shader>("src/shadow_depth.vert", "src/shadow_depth.frag");
 
-    hud = std::make_unique<HUD>(1920, 1080);
-    crosshairTexture = std::make_shared<Texture>("assets/hud/crosshair.png", "texture_diffuse");
 
     skybox = std::make_unique<Skybox>("assets/skybox/night.hdr");
 
@@ -330,13 +327,6 @@ void DemoPhysics::draw(Shader& lightingShader, Shader& lampShader, const glm::ma
 
     glDisable(GL_DEPTH_TEST);
 
-    hud->resize(scrWidth, scrHeight);
-
-    float crosshairSize = 4.0f;
-    float x = (scrWidth / 2.0f) - (crosshairSize / 2.0f);
-    float y = (scrHeight / 2.0f) - (crosshairSize / 2.0f);
-
-    hud->drawSprite(crosshairTexture, glm::vec2(x, y), glm::vec2(crosshairSize, crosshairSize));
 
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
