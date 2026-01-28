@@ -125,7 +125,7 @@ void DemoPhysics::update(float deltaTime) {
         std::cout << "PostProcessing: " << (postProcessor->enabled ? "ON" : "OFF") << std::endl;
     }
 
-    // ---------------- ФІЗИКА ----------------
+    // ФІЗИКА
     float gravity = -19.6f;
 
     for (auto& object : shapes) {
@@ -155,7 +155,7 @@ void DemoPhysics::update(float deltaTime) {
         }
     }
 
-    // ---------------- РУХ ОБ’ЄКТА ----------------
+    // РУХ ОБ’ЄКТА
     if (g_controlledShape) {
         glm::vec3 pos = g_controlledShape->position;
         float moveSpeed = 3.0f * deltaTime;
@@ -174,7 +174,7 @@ void DemoPhysics::update(float deltaTime) {
         g_controlledShape->setPosition(pos);
     }
 
-    // ---------------- ТРАНСФОРМАЦІЇ ----------------
+    // ТРАНСФОРМАЦІЇ
     if (g_controlledShape) {
 
         if (GInput->isKeyDown(GLFW_KEY_R))
@@ -194,7 +194,7 @@ void DemoPhysics::update(float deltaTime) {
         }
     }
 
-    // ---------------- РУХ ГРАВЦЯ ----------------
+    // РУХ ГРАВЦЯ
     glm::vec3 moveDir = glm::vec3(0.0f);
     glm::vec3 flatFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
     glm::vec3 flatRight = glm::normalize(glm::cross(flatFront, glm::vec3(0.0f, 1.0f, 0.0f)));
