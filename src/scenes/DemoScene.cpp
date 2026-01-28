@@ -67,9 +67,7 @@ void DemoScene::drawDepth(Shader& depthShader)
 {
     depthShader.use();
 
-    // Для тіней інколи корисно включити culling front face (боротьба з shadow acne),
-    // але це опційно. Якщо хочеш — скажу як правильно.
-    // Поки максимально просто:
+    // Для тіней інколи корисно включити culling front face (боротьба з shadow acne)
     glDisable(GL_CULL_FACE);
 
     for (const auto& shape : shapes) {

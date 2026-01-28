@@ -9,9 +9,9 @@ public:
 
     void update(GLFWwindow* window);
 
-    bool isKeyDown(int key);        // тримається
-    bool isKeyPressed(int key);     // натиснуто один раз
-    bool isKeyReleased(int key);    // відпущено один раз
+    bool isKeyDown(int key);
+    bool isKeyPressed(int key);
+    bool isKeyReleased(int key);
 
     void handleMouse(double xpos, double ypos);
     void handleScroll(double xoffset, double yoffset);

@@ -11,7 +11,7 @@ void Cylinder::build(float radius, float height, int segments) {
 
     float halfH = height * 0.5f;
 
-    // ===== БІЧНА СТІНКА =====
+    // БІЧНА СТІНКА
     for (int i = 0; i < segments; i++) {
         float a0 = (float)i / segments * 2.0f * M_PI;
         float a1 = (float)(i + 1) / segments * 2.0f * M_PI;
@@ -41,7 +41,7 @@ void Cylinder::build(float radius, float height, int segments) {
         });
     }
 
-    // ===== ВЕРХНЯ КРИШКА =====
+    // ВЕРХНЯ КРИШКА
     for (int i = 0; i < segments; i++) {
         float a0 = (float)i / segments * 2.0f * M_PI;
         float a1 = (float)(i + 1) / segments * 2.0f * M_PI;
@@ -58,7 +58,7 @@ void Cylinder::build(float radius, float height, int segments) {
         });
     }
 
-    // ===== НИЖНЯ КРИШКА =====
+    //  НИЖНЯ КРИШКА
     for (int i = 0; i < segments; i++) {
         float a0 = (float)i / segments * 2.0f * M_PI;
         float a1 = (float)(i + 1) / segments * 2.0f * M_PI;

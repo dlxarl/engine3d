@@ -23,7 +23,7 @@ public:
     glm::vec3 position;
     glm::vec3 velocity;
     glm::vec3 scale;
-    glm::vec3 rotation;  // Euler angles in degrees
+    glm::vec3 rotation;
 
     bool useGravity;
     bool isStatic;

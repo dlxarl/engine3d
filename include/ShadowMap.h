@@ -7,7 +7,7 @@ public:
     unsigned int depthMapFBO = 0;
     unsigned int depthMap    = 0;
 
-    // 8192 дуже жирно, але хай буде як у вас
+
     const unsigned int SHADOW_WIDTH  = 8192;
     const unsigned int SHADOW_HEIGHT = 8192;
 

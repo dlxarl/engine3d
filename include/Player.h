@@ -13,7 +13,7 @@ public:
     void jump();
 
     void setCrouch(bool crouching);
-    void setGrounded(bool grounded);  // Для спавну на землі
+    void setGrounded(bool grounded);
 
     glm::vec3 getCameraPosition() const;
 
