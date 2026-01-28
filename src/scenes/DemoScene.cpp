@@ -41,14 +41,8 @@ void DemoScene::update(float /*deltaTime*/) {
 void DemoScene::draw(Shader& lightingShader, Shader& lampShader,
                      const glm::mat4& view, const glm::mat4& proj)
 {
-    // Engine вже зробив lightingShader.use() і встановив:
-    // projection, view, viewPos, lightSpaceMatrix, shadowMap
-    // Тут задаємо тільки те, що змінюється в сцені:
     lightingShader.setVec3("lightPos", lightPos);
     lightingShader.setVec3("lightColor", glm::vec3(1.0f));
-
-    // Якщо ви не використовуєте culling — можна не чіпати.
-    // Але якщо в проекті він увімкнений десь глобально — краще вимкнути для стабільності демо:
     glDisable(GL_CULL_FACE);
 
     for (const auto& shape : shapes) {
@@ -71,7 +65,6 @@ void DemoScene::draw(Shader& lightingShader, Shader& lampShader,
 
 void DemoScene::drawDepth(Shader& depthShader)
 {
-    // Engine вже міг зробити depthShader.use(), але ок якщо і тут:
     depthShader.use();
 
     // Для тіней інколи корисно включити culling front face (боротьба з shadow acne),

@@ -28,7 +28,6 @@ void Shape::setPosition(glm::vec3 pos) {
 }
 
 void Shape::rotate(float angle, glm::vec3 axis) {
-    // Add rotation to existing rotation
     rotation += axis * angle;
     updateModelMatrix();
 }

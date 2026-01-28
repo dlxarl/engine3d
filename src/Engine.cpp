@@ -25,6 +25,7 @@ Engine::Engine() {
     width = 1920;
     height = 1080;
     input = std::make_unique<Input>();
+    GInput = input.get();
 
     deltaTime = 0.0f;
     lastFrame = 0.0f;
@@ -123,6 +124,7 @@ void Engine::run() {
             g_fpsLastTime = currentFrame;
         }
 
+        input->update(window);
         processInput();
         update();
         render();
@@ -146,23 +148,25 @@ void Engine::run() {
 }
 
 void Engine::processInput() {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (input->isKeyPressed(GLFW_KEY_ESCAPE))
         glfwSetWindowShouldClose(window, true);
 
-    // Manual FPS control
-    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+    if (input->isKeyPressed(GLFW_KEY_1)) {
         targetFPS = 30;
         std::cout << "FPS limit: 30" << std::endl;
     }
-    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+
+    if (input->isKeyPressed(GLFW_KEY_2)) {
         targetFPS = 70;
         std::cout << "FPS limit: 70" << std::endl;
     }
-    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+
+    if (input->isKeyPressed(GLFW_KEY_0)) {
         targetFPS = 0;
         std::cout << "FPS limit: OFF" << std::endl;
     }
 }
+
 
 void Engine::update() {
     glm::vec3 front;

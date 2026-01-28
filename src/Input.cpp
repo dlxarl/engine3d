@@ -1,16 +1,37 @@
 #include "Input.h"
 
+Input* GInput = nullptr;
+
 Input::Input() {
     yaw = -90.0f;
     pitch = 0.0f;
     fov = 45.0f;
+
     lastX = 400.0f;
     lastY = 300.0f;
     firstMouse = true;
+
+
 }
 
-bool Input::isKeyPressed(GLFWwindow* window, int key) {
-    return glfwGetKey(window, key) == GLFW_PRESS;
+void Input::update(GLFWwindow* window) {
+    previousKeys = currentKeys;
+
+    for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; key++) {
+        currentKeys[key] = (glfwGetKey(window, key) == GLFW_PRESS);
+    }
+}
+
+bool Input::isKeyDown(int key) {
+    return currentKeys[key];
+}
+
+bool Input::isKeyPressed(int key) {
+    return currentKeys[key] && !previousKeys[key];
+}
+
+bool Input::isKeyReleased(int key) {
+    return !currentKeys[key] && previousKeys[key];
 }
 
 void Input::handleMouse(double xpos, double ypos) {
@@ -21,7 +42,7 @@ void Input::handleMouse(double xpos, double ypos) {
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; 
+    float yoffset = lastY - ypos;
     lastX = xpos;
     lastY = ypos;
 

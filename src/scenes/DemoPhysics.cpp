@@ -5,6 +5,7 @@
 #include "ShadowMap.h"
 #include "PostProcessor.h"
 #include "Player.h"
+#include "Input.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -89,19 +90,15 @@ void DemoPhysics::load() {
 }
 
 void DemoPhysics::update(float deltaTime) {
-    GLFWwindow* window = glfwGetCurrentContext();
 
-    // Перезавантаження сцени — тепер на T
-    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
+    // Перезавантаження сцени — T
+    if (GInput->isKeyPressed(GLFW_KEY_T)) {
         load();
         return;
     }
 
-    // Перемикання об’єкта на N
-    static bool nPressed = false;
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !nPressed) {
-        nPressed = true;
-
+    // Перемикання об’єкта — N
+    if (GInput->isKeyPressed(GLFW_KEY_N)) {
         g_controlledIndex++;
         if (g_controlledIndex >= shapes.size())
             g_controlledIndex = 0;
@@ -109,40 +106,26 @@ void DemoPhysics::update(float deltaTime) {
         g_controlledShape = shapes[g_controlledIndex];
         std::cout << "Selected object #" << g_controlledIndex << std::endl;
     }
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE) {
-        nPressed = false;
-    }
 
-    // Перемикач освітлення (L)
-    static bool lPressed = false;
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !lPressed) {
-        lPressed = true;
+    // Освітлення — L
+    if (GInput->isKeyPressed(GLFW_KEY_L)) {
         g_enableLighting = !g_enableLighting;
         std::cout << "Lighting: " << (g_enableLighting ? "ON" : "OFF") << std::endl;
     }
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE) lPressed = false;
 
-    // Перемикач тіней (K)
-    static bool kPressed = false;
-    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS && !kPressed) {
-        kPressed = true;
+    // Тіні — K
+    if (GInput->isKeyPressed(GLFW_KEY_K)) {
         g_enableShadows = !g_enableShadows;
         std::cout << "Shadows: " << (g_enableShadows ? "ON" : "OFF") << std::endl;
     }
-    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_RELEASE) kPressed = false;
 
-    // Постпроцесинг
-    static bool mKeyPressed = false;
-    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mKeyPressed) {
+    // Постпроцесинг — M
+    if (GInput->isKeyPressed(GLFW_KEY_M)) {
         postProcessor->enabled = !postProcessor->enabled;
         std::cout << "PostProcessing: " << (postProcessor->enabled ? "ON" : "OFF") << std::endl;
-        mKeyPressed = true;
-    }
-    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE) {
-        mKeyPressed = false;
     }
 
-    // Фізика
+    // ---------------- ФІЗИКА ----------------
     float gravity = -19.6f;
 
     for (auto& object : shapes) {
@@ -172,45 +155,38 @@ void DemoPhysics::update(float deltaTime) {
         }
     }
 
-    // Рух активного об’єкта стрілками
+    // ---------------- РУХ ОБ’ЄКТА ----------------
     if (g_controlledShape) {
         glm::vec3 pos = g_controlledShape->position;
         float moveSpeed = 3.0f * deltaTime;
 
-        // XZ рух
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)    pos.z -= moveSpeed;
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  pos.z += moveSpeed;
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)  pos.x -= moveSpeed;
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) pos.x += moveSpeed;
+        if (GInput->isKeyDown(GLFW_KEY_UP))    pos.z -= moveSpeed;
+        if (GInput->isKeyDown(GLFW_KEY_DOWN))  pos.z += moveSpeed;
+        if (GInput->isKeyDown(GLFW_KEY_LEFT))  pos.x -= moveSpeed;
+        if (GInput->isKeyDown(GLFW_KEY_RIGHT)) pos.x += moveSpeed;
 
-        // Y рух (вгору/вниз)
-        if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS)
+        if (GInput->isKeyDown(GLFW_KEY_KP_ADD) || GInput->isKeyDown(GLFW_KEY_EQUAL))
             pos.y += moveSpeed;
 
-        if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS)
+        if (GInput->isKeyDown(GLFW_KEY_KP_SUBTRACT) || GInput->isKeyDown(GLFW_KEY_MINUS))
             pos.y -= moveSpeed;
 
         g_controlledShape->setPosition(pos);
     }
 
-
-    //Трансформації R/I/O
+    // ---------------- ТРАНСФОРМАЦІЇ ----------------
     if (g_controlledShape) {
 
-        // R — обертання
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+        if (GInput->isKeyDown(GLFW_KEY_R))
             g_controlledShape->rotate(90.0f * deltaTime, glm::vec3(0, 1, 0));
-        }
 
-        // I — збільшення
-        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+        if (GInput->isKeyDown(GLFW_KEY_I)) {
             glm::vec3 sc = g_controlledShape->scale;
             sc += glm::vec3(1.0f) * deltaTime;
             g_controlledShape->setScale(sc);
         }
 
-        // O — зменшення
-        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+        if (GInput->isKeyDown(GLFW_KEY_O)) {
             glm::vec3 sc = g_controlledShape->scale;
             sc -= glm::vec3(1.0f) * deltaTime;
             sc = glm::max(sc, glm::vec3(0.1f));
@@ -218,30 +194,31 @@ void DemoPhysics::update(float deltaTime) {
         }
     }
 
-    // Рух гравця
+    // ---------------- РУХ ГРАВЦЯ ----------------
     glm::vec3 moveDir = glm::vec3(0.0f);
     glm::vec3 flatFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
     glm::vec3 flatRight = glm::normalize(glm::cross(flatFront, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) moveDir += flatFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) moveDir -= flatFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) moveDir -= flatRight;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) moveDir += flatRight;
+    if (GInput->isKeyDown(GLFW_KEY_W)) moveDir += flatFront;
+    if (GInput->isKeyDown(GLFW_KEY_S)) moveDir -= flatFront;
+    if (GInput->isKeyDown(GLFW_KEY_A)) moveDir -= flatRight;
+    if (GInput->isKeyDown(GLFW_KEY_D)) moveDir += flatRight;
 
     if (glm::length(moveDir) > 0) moveDir = glm::normalize(moveDir);
 
-    player->runSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ? 8.0f : 6.0f;
+    player->runSpeed = (GInput->isKeyDown(GLFW_KEY_LEFT_SHIFT)) ? 8.0f : 6.0f;
 
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) player->setCrouch(true);
-    else player->setCrouch(false);
+    player->setCrouch(GInput->isKeyDown(GLFW_KEY_C));
 
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) player->jump();
+    if (GInput->isKeyDown(GLFW_KEY_SPACE))
+        player->jump();
 
     player->move(moveDir);
     player->update(deltaTime, shapes);
 
     cameraPos = player->getCameraPosition();
 }
+
 
 void DemoPhysics::renderScene(Shader& shader) {
     for (const auto& shape : shapes) {
